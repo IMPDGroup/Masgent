@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vasp-agent"
-version = "0.1.1"
+version = "0.1.2"
 description = "An AI-assisted VASP calculation and data analysis framework"
 readme = "README.md"
 authors = [{name = "Guangchen Liu", email = "gliu4@wpi.edu"}]

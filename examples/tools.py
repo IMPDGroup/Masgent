@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-base_dir = Path("examples/test")
+base_dir = Path("examples/test_files")
 
 def read_file(name: str) -> str:
     """Return file content. If not exist, return error message.

@@ -1,7 +1,6 @@
 # VASP-Agent
 AI agent for VASP
 
-
 ## Publishing
 To publish a new version of the VASP-Agent package to TestPyPI, follow these steps:
 1. **Update Version Number**: 

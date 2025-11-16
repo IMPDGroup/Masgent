@@ -1,5 +1,12 @@
 
+import os
 from importlib.metadata import version, PackageNotFoundError
+
+def os_path_setup():
+    '''Set up base and target directories for VASP input files.'''
+    base_dir = os.getcwd()
+    target_dir = os.path.join(base_dir, 'vasp_inputs')
+    return base_dir, target_dir
 
 def print_title():
     '''Print the VASP-Agent ASCII banner and metadata inside a box.'''

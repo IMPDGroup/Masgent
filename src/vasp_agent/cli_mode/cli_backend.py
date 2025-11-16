@@ -1,4 +1,5 @@
 import sys
+
 import vasp_agent.cli_mode.cli_tools as cli_tools
 
 def print_help():

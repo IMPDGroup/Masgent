@@ -1,6 +1,7 @@
 import os, sys
 import asyncio
 from dotenv import load_dotenv
+
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai import Agent
 
@@ -75,10 +76,34 @@ def main():
 
     model = OpenAIChatModel(model_name='gpt-5-nano')
 
+    system_prompt = '''
+You are a VASP expert assistant.
+
+You have access to multiple tools for generating or manipulating VASP-related files such as
+POSCAR, INCAR, KPOINTS, POTCAR, structures, supercells, magnetic configurations, and more.
+
+When the user asks for something that can be handled by one of your tools, ALWAYS call that tool.
+Only call one tool per request.
+
+After a tool runs, output ONLY the tool’s return string. Do not add explanations, apologies, 
+summaries, or extra formatting.
+
+If a tool does not return anything, output a single short confirmation message such as 
+"Completed." without additional commentary.
+
+If the user asks a conceptual, explanatory, or theoretical question for which no tool applies,
+respond normally without calling a tool.
+
+If the user asks something ambiguous or underspecified, ask for clarification instead of guessing.
+    '''
+
     agent = Agent(
         model=model,
-        system_prompt='You are a experienced VASP expert assisting users with VASP-related tasks. Provide clear and concise answers to help users effectively.',
-        tools=[ai_tools.read_file, ai_tools.list_files, ai_tools.rename_file],
+        system_prompt=system_prompt,
+        tools=[
+            ai_tools.generate_simple_poscar,
+            ai_tools.generate_vasp_inputs_from_poscar,
+            ],
         )
     
     mode = asyncio.run(ai_mode(agent))

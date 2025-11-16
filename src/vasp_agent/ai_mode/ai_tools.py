@@ -1,39 +1,64 @@
-from pathlib import Path
 import os
+import warnings
+from ase.build import bulk
+from ase.io import write
+from ase.data import chemical_symbols
+from pymatgen.core import Structure
+from pymatgen.io.vasp.sets import MPRelaxSet
 
-base_dir = Path("examples/test_files")
+from pydantic_ai import Tool
 
-def read_file(name: str) -> str:
-    """Return file content. If not exist, return error message.
-    """
-    print(f"(read_file {name})")
-    try:
-        with open(base_dir / name, "r") as f:
-            content = f.read()
-        return content
-    except Exception as e:
-        return f"An error occurred: {e}"
+from vasp_agent.utils import os_path_setup
 
-def list_files() -> list[str]:
-    print("(list_file)")
-    file_list = []
-    for item in base_dir.rglob("*"):
-        if item.is_file():
-            file_list.append(str(item.relative_to(base_dir)))
-    return file_list
+# Do not show warnings
+warnings.filterwarnings('ignore')
 
-def rename_file(name: str, new_name: str) -> str:
-    print(f"(rename_file {name} -> {new_name})")
-    try:
-        new_path = base_dir / new_name
-        if not str(new_path).startswith(str(base_dir)):
-            return "Error: new_name is outside base_dir."
+@Tool
+def generate_simple_poscar(
+        name: str = 'Cu',
+        crystalstructure: str = 'fcc',
+        a: float = 3.5,
+    ) -> str:
+    '''Generate simple bulk POSCARs (sc, fcc, bcc, hcp) for testing or VASP input.
 
-        os.makedirs(new_path.parent, exist_ok=True)
-        os.rename(base_dir / name, new_path)
-        return f"File '{name}' successfully renamed to '{new_name}'."
-    except Exception as e:
-        return f"An error occurred: {e}"
+    name: str
+        Single chemical symbol of the element, e.g., 'Si', 'Cu', 'Fe', 'Mg'
+    crystalstructure: str
+        Must be one of sc, fcc, bcc, hcp
+    a: float
+        Lattice constant in Angstroms
+    '''
+    print(f'[Function Calling: generate_simple_POSCAR] Generating {crystalstructure} {name} POSCAR with a={a} Angstroms...')
 
+    # Set up directories
+    target_dir = os_path_setup()[1]
+    os.makedirs(target_dir, exist_ok=True)
 
+    # Validate element, if not valid, set it to 'Cu' by default
+    if name not in chemical_symbols:
+        name = 'Cu'
+
+    # Generate bulk structure and write POSCAR
+    atoms = bulk(name=name, crystalstructure=crystalstructure, a=a)
+    write(os.path.join(target_dir, 'POSCAR'), atoms, format='vasp')
+
+    return f'Generated {crystalstructure} {name} POSCAR with a={a} Angstroms and saved to {target_dir}/POSCAR.'
+
+@Tool
+def generate_vasp_inputs_from_poscar() -> str:
+    '''Generate standard VASP input files using pymatgen's MPRelaxSet from an existing POSCAR file in the base directory.
+    '''
+    print(f'[Function Calling: generate_vasp_inputs_from_poscar] Generating VASP input files from POSCAR...')
+    base_dir, target_dir = os_path_setup()
+
+    if not os.path.exists(os.path.join(target_dir, 'POSCAR')):
+        return f'No POSCAR file found in {target_dir}. Please provide a valid POSCAR file first or let the AI generate one for you.'
+
+    structure = Structure.from_file(os.path.join(target_dir, 'POSCAR'))
+    vis = MPRelaxSet(structure)
+
+    os.makedirs(target_dir, exist_ok=True)
+    vis.write_input(target_dir)
+
+    return f'Generated VASP input files (INCAR, KPOINTS, POTCAR) from POSCAR and saved to {target_dir}.'
 

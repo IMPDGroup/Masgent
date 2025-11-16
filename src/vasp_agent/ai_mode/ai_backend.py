@@ -83,25 +83,33 @@ You have access to multiple tools for generating or manipulating VASP-related fi
 POSCAR, INCAR, KPOINTS, POTCAR, structures, supercells, magnetic configurations, and more.
 
 When the user asks for something that can be handled by one of your tools, ALWAYS call that tool.
-Only call one tool per request.
+If the user omits a parameter, infer physically reasonable values before calling any tool.
+Do not call the tool with missing values.
 
-After a tool runs, output ONLY the tool’s return string. Do not add explanations, apologies, 
-summaries, or extra formatting.
+If a tool execution returns an error, analyze the error, correct the parameters,
+and immediately call the tool again.
 
-If a tool does not return anything, output a single short confirmation message such as 
-"Completed." without additional commentary.
+After a tool runs, OUTPUT ONLY THE CONTENT OF THE "message" FIELD
+from the tool's return value.
+Do NOT output the entire dictionary.
+Do NOT output "status".
+Do NOT output JSON.
+Do NOT add explanations, apologies, summaries, or extra text.
+Output ONLY the message string.
+
+If a tool returns nothing, output a single short confirmation: "Completed."
 
 If the user asks a conceptual, explanatory, or theoretical question for which no tool applies,
 respond normally without calling a tool.
 
-If the user asks something ambiguous or underspecified, ask for clarification instead of guessing.
+If the user asks something ambiguous or underspecified, ask for clarification.
     '''
 
     agent = Agent(
         model=model,
         system_prompt=system_prompt,
         tools=[
-            ai_tools.generate_simple_poscar,
+            ai_tools.generate_poscar,
             ai_tools.generate_vasp_inputs_from_poscar,
             ],
         )

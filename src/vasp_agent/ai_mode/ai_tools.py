@@ -2,7 +2,6 @@ import os
 import warnings
 from ase.build import bulk
 from ase.io import write
-from ase.data import chemical_symbols
 from pymatgen.core import Structure
 from pymatgen.io.vasp.sets import MPRelaxSet
 
@@ -14,35 +13,64 @@ from vasp_agent.utils import os_path_setup
 warnings.filterwarnings('ignore')
 
 @Tool
-def generate_simple_poscar(
+def generate_poscar(
         name: str = 'Cu',
         crystalstructure: str = 'fcc',
-        a: float = 3.5,
+        a: float = None,
+        b: float = None,
+        c: float = None,
+        alpha: float = None,
     ) -> str:
-    '''Generate simple bulk POSCARs (sc, fcc, bcc, hcp) for testing or VASP input.
+    '''Creating bulk systems.
+
+    Before calling this tool, infer any missing or underspecified parameters from chemistry knowledge.
+    
+    If this tool returns an error, analyze the message and call the tool again with corrected parameters.
 
     name: str
-        Single chemical symbol of the element, e.g., 'Si', 'Cu', 'Fe', 'Mg'
+        Chemical symbol or symbols as in 'MgO' or 'NaCl'.
     crystalstructure: str
-        Must be one of sc, fcc, bcc, hcp
+        Must be one of sc, fcc, bcc, tetragonal, bct, hcp, rhombohedral,
+        orthorhombic, mcl, diamond, zincblende, rocksalt, cesiumchloride,
+        fluorite or wurtzite.
     a: float
         Lattice constant in Angstroms
+    a: float
+        Lattice constant.
+    b: float
+        Lattice constant.  If only a and b is given, b will be interpreted
+        as c instead.
+    c: float
+        Lattice constant.
+    alpha: float
+        Angle in degrees for rhombohedral lattice.
     '''
-    print(f'[Function Calling: generate_simple_POSCAR] Generating {crystalstructure} {name} POSCAR with a={a} Angstroms...')
+    print(f'[Function Calling] generate_poscar( name={name}, crystalstructure={crystalstructure}, a={a}, b={b}, c={c}, alpha={alpha} )')
 
     # Set up directories
     target_dir = os_path_setup()[1]
     os.makedirs(target_dir, exist_ok=True)
 
-    # Validate element, if not valid, set it to 'Cu' by default
-    if name not in chemical_symbols:
-        name = 'Cu'
-
     # Generate bulk structure and write POSCAR
-    atoms = bulk(name=name, crystalstructure=crystalstructure, a=a)
-    write(os.path.join(target_dir, 'POSCAR'), atoms, format='vasp')
-
-    return f'Generated {crystalstructure} {name} POSCAR with a={a} Angstroms and saved to {target_dir}/POSCAR.'
+    try:
+        atoms = bulk(
+            name=name,
+            crystalstructure=crystalstructure,
+            a=a,
+            b=b,
+            c=c,
+            alpha=alpha,
+        )
+        write(os.path.join(target_dir, 'POSCAR'), atoms, format='vasp')
+        return {
+            'status': 'success',
+            'message': f'Generated {crystalstructure} {name} POSCAR with a={a}, b={b}, c={c}, alpha={alpha} Angstroms and saved to {target_dir}/POSCAR.'
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Error generating POSCAR: {e}'
+        }
 
 @Tool
 def generate_vasp_inputs_from_poscar() -> str:

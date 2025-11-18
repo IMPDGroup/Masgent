@@ -1,5 +1,5 @@
 # DFT-Agent
-AI agent for DFT
+The Materials Simulation Intelligence Framework
 
 ## Local Debugging and Testing
 ```bash

@@ -8,7 +8,13 @@ from pymatgen.io.vasp import Poscar
 from mp_api.client import MPRester
 
 from masgent.utils import os_path_setup
-from masgent.ai_mode.schemas import GenerateVaspPoscarSchema, ConvertStructureFormatSchema, ConvertPoscarCoordinatesSchema, GenerateVaspInputsFromPoscar, CustomizeVaspKpointsWithAccuracy
+from masgent.ai_mode.schemas import ( 
+    GenerateVaspPoscarSchema, 
+    ConvertStructureFormatSchema, 
+    ConvertPoscarCoordinatesSchema, 
+    GenerateVaspInputsFromPoscar, 
+    CustomizeVaspKpointsWithAccuracy, 
+    )
 
 # Do not show warnings
 warnings.filterwarnings('ignore')

@@ -1,28 +1,24 @@
 # masgent/ai_mode/tools.py
 
 import os, warnings, datetime
-from ase.build import bulk
-from ase.io import write
 from pymatgen.core import Structure
-from pymatgen.io.vasp.sets import MPStaticSet, MPRelaxSet, MPNonSCFSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet, Kpoints, Potcar
+from pymatgen.io.vasp.sets import MPStaticSet, MPRelaxSet, MPNonSCFSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet, Kpoints
+from pymatgen.io.vasp import Poscar
+from mp_api.client import MPRester
 
 from masgent.utils import os_path_setup
-from masgent.ai_mode.schemas import GenerateSimplePOSCARSchema, GenerateVaspInputFromPoscar, CustomizeKpointsWithAccuracy
+from masgent.ai_mode.schemas import GenerateVaspPoscarSchema, GenerateVaspInputsFromPoscar, CustomizeVaspKpointsWithAccuracy
 
 # Do not show warnings
 warnings.filterwarnings('ignore')
 
-def generate_simple_poscar(input: GenerateSimplePOSCARSchema) -> str:
-    '''Creating a simple bulk POSCAR
+def generate_vasp_poscar(input: GenerateVaspPoscarSchema) -> str:
     '''
-    print(f'[Debug: Function Calling] generate_simple_poscar with input: {input}')
-
-    name = input.name
-    crystalstructure   = input.crystalstructure
-    a    = input.a
-    b    = input.b
-    c    = input.c
-    alpha = input.alpha
+    Generate VASP POSCAR file from user inputs or from Materials Project database.
+    '''
+    print(f'[Debug: Function Calling] generate_vasp_poscar with input: {input}')
+    
+    formula = input.formula
 
     try:
         base_dir, runs_dir, output_dir = os_path_setup()
@@ -30,30 +26,31 @@ def generate_simple_poscar(input: GenerateSimplePOSCARSchema) -> str:
         runs_timestamp_dir = os.path.join(runs_dir, f'runs_{timestamp}')
         os.makedirs(runs_timestamp_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
-
-        atoms = bulk(
-            name=name,
-            crystalstructure=crystalstructure,
-            a=a,
-            b=b,
-            c=c,
-            alpha=alpha,
-        )
+        
+        with MPRester() as mpr:
+            docs = mpr.materials.summary.search(formula=formula)
+            if not docs:
+                return f'\nNo materials found in Materials Project database for formula: {formula}'
+            
+            mid = docs[0].material_id   # pick the first match
+            structure = mpr.get_structure_by_material_id(mid)
+            poscar = Poscar(structure)
 
         # Write POSCAR file to the timestamped run directory
-        write(os.path.join(runs_timestamp_dir, 'POSCAR'), atoms, format='vasp', direct=True)
+        poscar.write_file(os.path.join(runs_timestamp_dir, 'POSCAR'), direct=True)
         # Also write to the main target directory for easy access
-        write(os.path.join(output_dir, 'POSCAR'), atoms, format='vasp', direct=True)
+        poscar.write_file(os.path.join(output_dir, 'POSCAR'), direct=True)
 
         return f'\nUpdated POSCAR in {output_dir}.'
 
     except Exception as e:
         return f'\nPOSCAR generation failed: {str(e)}'
     
-def generate_vasp_input_from_poscar(input: GenerateVaspInputFromPoscar) -> str:
-    '''Generate VASP input files (INCAR, KPOINTS, POTCAR) using pymatgen input sets.
+def generate_vasp_inputs_from_poscar(input: GenerateVaspInputsFromPoscar) -> str:
     '''
-    print(f'[Debug: Function Calling] generate_vasp_input_from_poscar with input: {input}')
+    Generate VASP input files (INCAR, KPOINTS, POTCAR) using pymatgen input sets.
+    '''
+    print(f'[Debug: Function Calling] generate_vasp_inputs_from_poscar with input: {input}')
     
     poscar_path = input.poscar_path
     vasp_input_sets = input.vasp_input_sets
@@ -92,10 +89,11 @@ def generate_vasp_input_from_poscar(input: GenerateVaspInputFromPoscar) -> str:
     except Exception as e:
         return f'\nVASP input files generation failed: {str(e)}'
     
-def customize_kpoints_with_accuracy(input: CustomizeKpointsWithAccuracy) -> str:
-    '''Customize VASP KPOINTS from POSCAR with specified accuracy level.
+def customize_vasp_kpoints_with_accuracy(input: CustomizeVaspKpointsWithAccuracy) -> str:
     '''
-    print(f'[Debug: Function Calling] customize_kpoints_with_accuracy with input: {input}')
+    Customize VASP KPOINTS from POSCAR with specified accuracy level.
+    '''
+    print(f'[Debug: Function Calling] customize_vasp_kpoints_with_accuracy with input: {input}')
     
     poscar_path = input.poscar_path
     accuracy_level = input.accuracy_level

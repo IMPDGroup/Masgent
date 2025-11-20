@@ -52,23 +52,9 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
 
 
 ## Progress
-- Generate simple POSCAR files
-  - Support crystal structures:
-    - `sc`: Simple Cubic
-    - `fcc`: Face-Centered Cubic
-    - `bcc`: Body-Centered Cubic
-    - `hcp`: Hexagonal Close-Packed
-    - `bct`: Body-Centered Tetragonal
-    - `mcl`: Monoclinic
-    - `tetragonal`: Tetragonal
-    - `rhombohedral`: Rhombohedral
-    - `orthorhombic`: Orthorhombic
-    - `diamond`: Diamond Structure
-    - `zincblende`: Zinc Blende Structure
-    - `rocksalt`: Rock Salt Structure
-    - `cesiumchloride`: Cesium Chloride Structure
-    - `wurtzite`: Wurtzite Structure
-    - `fluorite`: Fluorite Structure
+- Generate VASP POSCAR file from chemical formula
+  - Validate chemical formula input
+  - Support fetching structures from Materials Project database
 
 - Generate VASP input files for provided POSCAR
   - Support calculations:

@@ -15,6 +15,7 @@ dependencies = [
     "numpy>=1.26.4",
     "pydantic_ai>=0.8.1",
     "pymatgen>=2024.10.3",
+    "mp-api>=0.45.13",
     "dotenv>=0.9.9",
 ]
 

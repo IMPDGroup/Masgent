@@ -9,10 +9,10 @@ from pydantic_ai import Agent
 
 import masgent.ai_mode.tools as tools
 
-def ask_for_api_key():
+def ask_for_openai_api_key():
     key = input('Enter your OpenAI API key: ').strip()
     if not key:
-        print('\nAPI key cannot be empty. Exiting...\n')
+        print('\nOpenAI API key cannot be empty. Exiting...\n')
         sys.exit(1)
 
     # Store temporarily for this session
@@ -23,9 +23,27 @@ def ask_for_api_key():
     if save == 'y':
         with open('.env', 'w') as f:
             f.write(f'OPENAI_API_KEY={key}\n')
-        print('\nAPI key saved to .env file.')
+        print('\nOpenAI API key saved to .env file.')
         
-    print('\nAPI key loaded.\n')
+    print('\nOpenAI API key loaded.\n')
+
+def ask_for_mp_api_key():
+    key = input('Enter your Materials Project API key: ').strip()
+    if not key:
+        print('\nMaterials Project API key cannot be empty. Exiting...\n')
+        sys.exit(1)
+
+    # Store temporarily for this session
+    os.environ['MP_API_KEY'] = key
+
+    # Optional: write to .env so user never needs to type again
+    save = input('\nSave this key to .env file for future? (y/n): ').strip().lower()
+    if save == 'y':
+        with open('.env', 'a') as f:
+            f.write(f'MP_API_KEY={key}\n')
+        print('\nMaterials Project API key saved to .env file.')
+        
+    print('\nMaterials Project API key loaded.\n')
 
 def print_help():
     print('\nMasgent AI Mode usage:')
@@ -81,9 +99,14 @@ def main():
     load_dotenv(dotenv_path='.env')
 
     if 'OPENAI_API_KEY' not in os.environ:
-        ask_for_api_key()
+        ask_for_openai_api_key()
     else:
-        print('API key found in environment.\n')
+        print('OpenAI API key found in environment.\n')
+
+    if 'MP_API_KEY' not in os.environ:
+        ask_for_mp_api_key()
+    else:
+        print('Materials Project API key found in environment.\n')
 
     model = OpenAIChatModel(model_name='gpt-5-nano')
 
@@ -127,9 +150,9 @@ CLARITY:
         model=model,
         system_prompt=system_prompt,
         tools=[
-            tools.generate_simple_poscar,
-            tools.generate_vasp_input_from_poscar,
-            tools.customize_kpoints_with_accuracy,
+            tools.generate_vasp_poscar,
+            tools.generate_vasp_inputs_from_poscar,
+            tools.customize_vasp_kpoints_with_accuracy,
         ],
         )
     

@@ -2,7 +2,7 @@
 
 import sys
 
-import masgent.cli_mode.cli_tools as cli_tools
+from masgent.cli_mode import cli_tools
 
 def print_help():
     print('\nMasgent CLI mode usage:')

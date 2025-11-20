@@ -17,6 +17,7 @@ dependencies = [
     "pymatgen>=2024.10.3",
     "mp-api>=0.45.13",
     "dotenv>=0.9.9",
+    "colorama>=0.4.6"
 ]
 
 [project.optional-dependencies]

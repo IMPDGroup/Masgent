@@ -56,7 +56,7 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
   - Validate chemical formula input
   - Support fetching structures from Materials Project database
 
-- Generate VASP input files for provided POSCAR
+- Generate suggested VASP input files (INCAR, KPOINTS, POTCAR)
   - Support calculations:
     - `MPRelaxSet`: for relaxation calculations
     - `MPStaticSet`: for static calculations
@@ -70,3 +70,13 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
     - `Low`
     - `Medium`
     - `High`
+
+- Convert structures between different formats (CIF, POSCAR, XYZ, etc.)
+  - Support conversions:
+    - `POSCAR` <-> `CIF`
+    - `POSCAR` <-> `XYZ`
+    - `CIF` <-> `XYZ`
+
+- Convert POSCAR between direct and cartesian coordinates
+  - Support conversions:
+    - `Direct` <-> `Cartesian`

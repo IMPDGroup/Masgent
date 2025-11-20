@@ -3,11 +3,12 @@
 import os, sys
 import asyncio
 from dotenv import load_dotenv
+from colorama import init, Fore, Style
 
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai import Agent
 
-import masgent.ai_mode.tools as tools
+from masgent.ai_mode import tools
 
 def ask_for_openai_api_key():
     key = input('Enter your OpenAI API key: ').strip()
@@ -61,7 +62,7 @@ async def chat_stream(agent, user_input: str, history: list):
         fully_reply = ''
         async for chunk in result.stream_text(delta=True):
             fully_reply += chunk
-            print(chunk, end='', flush=True)
+            print(Fore.CYAN + chunk + Style.RESET_ALL, end='', flush=True)
         print('\n')
 
         all_msgs = list(result.all_messages())
@@ -153,6 +154,8 @@ CLARITY:
             tools.generate_vasp_poscar,
             tools.generate_vasp_inputs_from_poscar,
             tools.customize_vasp_kpoints_with_accuracy,
+            tools.convert_structure_format,
+            tools.convert_poscar_coordinates,
         ],
         )
     

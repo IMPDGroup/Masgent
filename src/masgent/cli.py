@@ -2,8 +2,8 @@
 
 import sys
 
-import masgent.ai_mode.backend as backend
-import masgent.cli_mode.cli_backend as cli_backend
+from masgent.ai_mode import backend
+from masgent.cli_mode import cli_backend
 from masgent.utils import print_title
 
 def cli_mode():

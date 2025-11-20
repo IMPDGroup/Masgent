@@ -1,3 +1,7 @@
+# Custom Python.gitignore file
+masgent_runs/
+masgent_outputs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

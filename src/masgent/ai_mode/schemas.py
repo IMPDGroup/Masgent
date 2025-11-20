@@ -121,11 +121,6 @@ class GenerateIncarFromPoscar(BaseModel):
             ...,
             description='Type of Pymatgen VASP input set class to use. Must be one of the supported types.'
         )
-    
-    user_incar_settings: Optional[dict] = Field(
-        None,
-        description='Optional INCAR overrides to pass into the pymatgen input set.'
-    )
 
     @model_validator(mode='after')
     def model_validator(self):

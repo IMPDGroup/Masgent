@@ -25,10 +25,11 @@ def generate_simple_poscar(input: GenerateSimplePOSCARSchema) -> str:
     alpha = input.alpha
 
     try:
-        base_dir, target_dir = os_path_setup()
+        base_dir, runs_dir, output_dir = os_path_setup()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        save_dir = os.path.join(target_dir, f'runs_{timestamp}')
-        os.makedirs(save_dir, exist_ok=True)
+        runs_timestamp_dir = os.path.join(runs_dir, f'runs_{timestamp}')
+        os.makedirs(runs_timestamp_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
 
         atoms = bulk(
             name=name,
@@ -38,9 +39,13 @@ def generate_simple_poscar(input: GenerateSimplePOSCARSchema) -> str:
             c=c,
             alpha=alpha,
         )
-        write(os.path.join(save_dir, 'POSCAR'), atoms, format='vasp', direct=True)
 
-        return f'\nGenerated POSCAR in {save_dir}.'
+        # Write POSCAR file to the timestamped run directory
+        write(os.path.join(runs_timestamp_dir, 'POSCAR'), atoms, format='vasp', direct=True)
+        # Also write to the main target directory for easy access
+        write(os.path.join(output_dir, 'POSCAR'), atoms, format='vasp', direct=True)
+
+        return f'\nUpdated POSCAR in {output_dir}.'
 
     except Exception as e:
         return f'\nPOSCAR generation failed: {str(e)}'
@@ -52,7 +57,6 @@ def generate_incar_from_poscar(input: GenerateIncarFromPoscar) -> str:
     
     poscar_path = input.poscar_path
     vasp_input_sets = input.vasp_input_sets
-    user_incar_settings = input.user_incar_settings
 
     VIS_MAP = {
         'MPRelaxSet': MPRelaxSet,
@@ -64,19 +68,24 @@ def generate_incar_from_poscar(input: GenerateIncarFromPoscar) -> str:
     }
     vis_class = VIS_MAP[vasp_input_sets]
 
-    kwargs = {}
-    kwargs['user_incar_settings'] = user_incar_settings
-
     try:
-        base_dir, target_dir = os_path_setup()
+        base_dir, runs_dir, output_dir = os_path_setup()
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        save_dir = os.path.join(target_dir, f'runs_{timestamp}')
-        os.makedirs(save_dir, exist_ok=True)
+        runs_timestamp_dir = os.path.join(runs_dir, f'runs_{timestamp}')
+        os.makedirs(runs_timestamp_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
+        
         structure = Structure.from_file(poscar_path)
-        vis = vis_class(structure, **kwargs)
-        vis.incar.write_file(os.path.join(save_dir, 'INCAR'))
-        vis.poscar.write_file(os.path.join(save_dir, 'POSCAR'), direct=True)
-        return f'\nGenerated INCAR based on {vasp_input_sets} in {save_dir}.'
+        vis = vis_class(structure)
+
+        # Write INCAR and POSCAR to the timestamped run directory
+        vis.incar.write_file(os.path.join(runs_timestamp_dir, 'INCAR'))
+        vis.poscar.write_file(os.path.join(runs_timestamp_dir, 'POSCAR'), direct=True)
+        # Also write to the main target directory for easy access
+        vis.incar.write_file(os.path.join(output_dir, 'INCAR'))
+        vis.poscar.write_file(os.path.join(output_dir, 'POSCAR'), direct=True)
+        
+        return f'\nUpdated INCAR based on {vasp_input_sets} in {output_dir}.'
     
     except Exception as e:
         return f'\nVASP INCAR generation failed: {str(e)}'

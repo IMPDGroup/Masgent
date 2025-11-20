@@ -46,7 +46,9 @@ async def chat_stream(agent, user_input: str, history: list):
             print(chunk, end='', flush=True)
         print('\n')
 
-        return list(result.all_messages())
+        all_msgs = list(result.all_messages())
+        
+        return all_msgs
 
 async def ai_mode(agent):
     history = []
@@ -67,7 +69,7 @@ async def ai_mode(agent):
             else:
                 try:
                     history = await chat_stream(agent, user_input, history)
-                    history = history[-10:]  # Keep last 10 messages
+                    print(f'[Debug] Current conversation history length: {len(history)} messages.\n')
                 except Exception as e:
                     print(f'[Error]: {e}')
 
@@ -90,31 +92,34 @@ You are MASGENT, a concise materials-simulation agent.
 
 GENERAL RULES:
 - Respond with ONE short sentence only.
-- When asking for missing parameters, ask ONE direct question only.
 - Never provide explanations unless the user asks.
+- Never call a tool until ALL required parameters are completed and confirmed.
 
-PARAMETER COMPLETION:
-- When parameters are missing, ask ONE short question describing the parameters in natural language.
-- Do not use internal parameter names; describe what the information represents.
-- Ask: "Do you want to provide <parameter information>, or should I infer it?"
-- Infer a parameter only if the user explicitly says "infer", "guess", or "you decide".
-- When inferring, use typical chemical and crystallographic defaults.
-- After inferring multiple parameters, confirm with ONE sentence: "Proceed with a = X and alpha = Y?"
+MISSING PARAMETER LOGIC:
+- If any required parameter is missing, ask for ONLY ONE missing item at a time.
+- Format: "Do you want to provide <natural-language description>, or should I decide for you?"
+- Do NOT summarize all missing parameters at once.
+- Only infer a parameter when the user explicitly says: "decide for me", "infer", "guess", or "you choose".
+
+PARAMETER INFERENCE:
+- Infer only ONE missing value per turn.
+- Use typical crystallographic defaults when inferring.
+- After inferring, continue asking for any remaining missing parameters.
+
+FINAL CONFIRMATION:
+- After ALL parameters are provided or inferred, ask:
+  "Proceed using <summary of final parameters>?"
+- Only run the tool when the user answers YES.
 
 TOOL CALL RULES:
 - Use a tool only when the user clearly requests an action the tool performs.
-- Do not call tools until all parameters are confirmed.
-- Never guess if the user does NOT explicitly give permission.
-
-TOOL RETURN RULES:
-- Tools return a string.
-- If the string is empty → tool succeeded → output NOTHING.
-- If the string is non-empty → output the string as the error.
+- After calling a tool, output ONLY the returned string.
+- No extra commentary.
 
 CLARITY:
+- One short sentence only.
 - No paragraphs.
-- No multi-sentence reasoning.
-- Only one short sentence for each reply.
+- No multi-sentence replies.
 
     '''
 

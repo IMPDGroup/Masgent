@@ -6,8 +6,9 @@ from importlib.metadata import version, PackageNotFoundError
 def os_path_setup():
     '''Set up base and target directories for VASP input files.'''
     base_dir = os.getcwd()
-    target_dir = os.path.join(base_dir, f'masgent_runs')
-    return base_dir, target_dir
+    runs_dir = os.path.join(base_dir, 'masgent_runs')
+    output_dir = os.path.join(base_dir, 'masgent_outputs')
+    return base_dir, runs_dir, output_dir
 
 def print_title():
     '''Print the Masgent ASCII banner and metadata inside a box.'''

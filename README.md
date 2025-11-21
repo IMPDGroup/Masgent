@@ -50,7 +50,8 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
       pip3 install --index-url https://test.pypi.org/simple/ masgent
       ```
 
-## Progress
+## Progress Record
+### Features Implemented
 - Generate VASP POSCAR file from chemical formula
   - Validate chemical formula input
   - Support fetching structures from Materials Project database
@@ -86,6 +87,7 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
     - `Interstitials`: add specified fraction or number of atoms of a given element
     - `Substitutions`: replace specified fraction or number of atoms of a given element with another element
 
+### Features Planned
 - Generate SQS structures using icet
   - Support input parameters:
     - Supercell size

@@ -9,7 +9,12 @@ from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai import Agent
 
 from masgent.ai_mode import tools
-from masgent.utils import ask_for_openai_api_key, ask_for_mp_api_key, load_system_prompts, color_print, color_input
+from masgent.utils import (
+    ask_for_openai_api_key, 
+    ask_for_mp_api_key, 
+    load_system_prompts, 
+    color_print, color_input
+    )
 
 def print_help():
     color_print('\nMasgent AI Mode usage:', 'green')

@@ -1,6 +1,6 @@
 # masgent/ai_mode/tools.py
 
-import os, warnings, datetime, random
+import os, warnings, random
 from ase.io import read, write
 from mp_api.client import MPRester
 from pymatgen.core import Structure

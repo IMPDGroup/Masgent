@@ -4,8 +4,15 @@ import sys
 import tabulate
 
 from masgent.cli_mode import functions
+from masgent import tools, schemas
 from masgent.utils import color_print, color_input
 from importlib.metadata import version, PackageNotFoundError
+
+input = schemas.GenerateVaspPoscarSchema(
+    formula='NaCl'
+)
+tools.generate_vasp_poscar(input=input)
+exit()
 
 def print_banner():
     '''Print the Masgent ASCII banner and metadata inside a box.'''
@@ -97,6 +104,7 @@ def main():
         '1': functions.command_1,
         '2': functions.command_2,
         '3': functions.command_3,
+        '5241': tools.generate_vasp_poscar,
     }
 
     try:

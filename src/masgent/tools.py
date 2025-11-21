@@ -14,20 +14,13 @@ from pymatgen.io.vasp.sets import (
     MPMDSet, 
     )
 
+from masgent import schemas
 from masgent.utils import (
     os_path_setup, 
     write_comments,
     color_print,
     ask_for_mp_api_key,
     validate_mp_api_key,
-    )
-from masgent.ai_mode.schemas import ( 
-    GenerateVaspPoscarSchema, 
-    ConvertStructureFormatSchema, 
-    ConvertPoscarCoordinatesSchema, 
-    GenerateVaspInputsFromPoscar, 
-    CustomizeVaspKpointsWithAccuracy, 
-    GenerateVaspPoscarWithDefects,
     )
 
 # Do not show warnings
@@ -36,7 +29,7 @@ warnings.filterwarnings('ignore')
 # Track whether Materials Project key has been checked during this process
 _mp_key_checked = False
 
-def generate_vasp_poscar(input: GenerateVaspPoscarSchema) -> str:
+def generate_vasp_poscar(input: schemas.GenerateVaspPoscarSchema) -> str:
     '''
     Generate VASP POSCAR file from user inputs or from Materials Project database.
     '''
@@ -79,7 +72,7 @@ def generate_vasp_poscar(input: GenerateVaspPoscarSchema) -> str:
     except Exception as e:
         return f'\nPOSCAR generation failed: {str(e)}'
     
-def generate_vasp_inputs_from_poscar(input: GenerateVaspInputsFromPoscar) -> str:
+def generate_vasp_inputs_from_poscar(input: schemas.GenerateVaspInputsFromPoscar) -> str:
     '''
     Generate VASP input files (INCAR, KPOINTS, POTCAR) using pymatgen input sets.
     '''
@@ -125,7 +118,7 @@ def generate_vasp_inputs_from_poscar(input: GenerateVaspInputsFromPoscar) -> str
     except Exception as e:
         return f'\nVASP input files generation failed: {str(e)}'
     
-def convert_structure_format(input: ConvertStructureFormatSchema) -> str:
+def convert_structure_format(input: schemas.ConvertStructureFormatSchema) -> str:
     '''
     Convert structure files between different formats (CIF, POSCAR, XYZ).
     '''
@@ -154,7 +147,7 @@ def convert_structure_format(input: ConvertStructureFormatSchema) -> str:
     except Exception as e:
         return f'\nStructure conversion failed: {str(e)}'
     
-def convert_poscar_coordinates(input: ConvertPoscarCoordinatesSchema) -> str:
+def convert_poscar_coordinates(input: schemas.ConvertPoscarCoordinatesSchema) -> str:
     '''
     Convert POSCAR between direct and cartesian coordinates.
     '''
@@ -184,7 +177,7 @@ def convert_poscar_coordinates(input: ConvertPoscarCoordinatesSchema) -> str:
     except Exception as e:
         return f'\nPOSCAR coordinate conversion failed: {str(e)}'
     
-def customize_vasp_kpoints_with_accuracy(input: CustomizeVaspKpointsWithAccuracy) -> str:
+def customize_vasp_kpoints_with_accuracy(input: schemas.CustomizeVaspKpointsWithAccuracy) -> str:
     '''
     Customize VASP KPOINTS from POSCAR with specified accuracy level.
     '''
@@ -219,7 +212,7 @@ def customize_vasp_kpoints_with_accuracy(input: CustomizeVaspKpointsWithAccuracy
     except Exception as e:
         return f'\nVASP KPOINTS generation failed: {str(e)}'
     
-def generate_vasp_poscar_with_defects(input: GenerateVaspPoscarWithDefects) -> str:
+def generate_vasp_poscar_with_defects(input: schemas.GenerateVaspPoscarWithDefects) -> str:
     '''
     Generate VASP POSCAR with defects: vacancies, interstitials, substitutions.
     '''

@@ -14,7 +14,13 @@ from pymatgen.io.vasp.sets import (
     MPMDSet, 
     )
 
-from masgent.utils import os_path_setup, write_comments
+from masgent.utils import (
+    os_path_setup, 
+    write_comments,
+    color_print,
+    ask_for_mp_api_key,
+    validate_mp_api_key,
+    )
 from masgent.ai_mode.schemas import ( 
     GenerateVaspPoscarSchema, 
     ConvertStructureFormatSchema, 
@@ -27,6 +33,9 @@ from masgent.ai_mode.schemas import (
 # Do not show warnings
 warnings.filterwarnings('ignore')
 
+# Track whether Materials Project key has been checked during this process
+_mp_key_checked = False
+
 def generate_vasp_poscar(input: GenerateVaspPoscarSchema) -> str:
     '''
     Generate VASP POSCAR file from user inputs or from Materials Project database.
@@ -37,6 +46,16 @@ def generate_vasp_poscar(input: GenerateVaspPoscarSchema) -> str:
 
     try:
         base_dir, runs_dir, runs_timestamp_dir, output_dir = os_path_setup()
+
+        # Ensure OpenAI API key exists and validate it only once per process
+        global _mp_key_checked
+        if not _mp_key_checked:
+            if 'MP_API_KEY' not in os.environ:
+                ask_for_mp_api_key()
+            else:
+                color_print('[Info] Materials Project API key found in environment.\n', 'green')
+                validate_mp_api_key(os.environ['MP_API_KEY'])
+            _mp_key_checked = True
         
         with MPRester() as mpr:
             docs = mpr.materials.summary.search(formula=formula)

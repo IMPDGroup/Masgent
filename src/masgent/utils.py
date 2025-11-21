@@ -3,7 +3,8 @@
 import os, sys, datetime
 from pathlib import Path
 from colorama import Fore, Style
-from importlib.metadata import version, PackageNotFoundError
+from mp_api.client import MPRester
+from openai import OpenAI
 
 def write_comments(file, file_type, comments):
     with open(file, 'r') as f:
@@ -49,41 +50,62 @@ def load_system_prompts():
     except Exception as e:
         return f'Error loading system prompts: {str(e)}'
 
+def validate_openai_api_key(key):
+    try:
+        client = OpenAI(api_key=key)
+        client.models.list()
+        color_print('[Info] OpenAI API key validated successfully.\n', 'green')
+    except Exception as e:
+        color_print('[Error] Invalid OpenAI API key. Exiting...\n', 'green')
+        sys.exit(1)
+
 def ask_for_openai_api_key():
     key = color_input('Enter your OpenAI API key: ', 'yellow').strip()
     if not key:
-        color_print('\nOpenAI API key cannot be empty. Exiting...\n', 'green')
+        color_print('[Error] OpenAI API key cannot be empty. Exiting...\n', 'green')
         sys.exit(1)
+    
+    validate_openai_api_key(key)
 
-    # Store temporarily for this session
     os.environ['OPENAI_API_KEY'] = key
 
-    # Optional: write to .env so user never needs to type again
-    save = color_input('\nSave this key to .env file for future? (y/n): ', 'yellow').strip().lower()
+    save = color_input('Save this key to .env file for future? (y/n): ', 'yellow').strip().lower()
+    base_dir = os.getcwd()
+    env_path = os.path.join(base_dir, '.env')
     if save == 'y':
-        with open('.env', 'w') as f:
+        with open(env_path, 'w') as f:
             f.write(f'OPENAI_API_KEY={key}\n')
-        color_print('\nOpenAI API key saved to .env file.', 'green')
-        
-    color_print('\nOpenAI API key loaded.\n', 'green')
+        color_print(f'[Info] OpenAI API key saved to {env_path} file.\n', 'green')
+    
+def validate_mp_api_key(key):
+    try:
+        with MPRester(key, mute_progress_bars=True) as mpr:
+            _ = mpr.materials.search(
+                formula='Si',
+                fields=['material_id']
+            )
+        color_print('[Info] Materials Project API key validated successfully.\n', 'green')
+    except Exception as e:
+        color_print('[Error] Invalid Materials Project API key. Exiting...\n', 'green')
+        sys.exit(1)
     
 def ask_for_mp_api_key():
     key = color_input('Enter your Materials Project API key: ', 'yellow').strip()
     if not key:
-        color_print('\nMaterials Project API key cannot be empty. Exiting...\n', 'green')
+        color_print('[Error] Materials Project API key cannot be empty. Exiting...\n', 'green')
         sys.exit(1)
 
-    # Store temporarily for this session
+    validate_mp_api_key(key)
+
     os.environ['MP_API_KEY'] = key
 
-    # Optional: write to .env so user never needs to type again
-    save = color_input('\nSave this key to .env file for future? (y/n): ', 'yellow').strip().lower()
+    save = color_input('Save this key to .env file for future? (y/n): ', 'yellow').strip().lower()
+    base_dir = os.getcwd()
+    env_path = os.path.join(base_dir, '.env')
     if save == 'y':
-        with open('.env', 'a') as f:
+        with open(env_path, 'a') as f:
             f.write(f'MP_API_KEY={key}\n')
-        color_print('\nMaterials Project API key saved to .env file.', 'green')
-        
-    color_print('\nMaterials Project API key loaded.\n', 'green')
+        color_print(f'Materials Project API key saved to {env_path} file.\n', 'green')
 
 def os_path_setup():
     '''Set up base and target directories for VASP input files.'''
@@ -95,36 +117,3 @@ def os_path_setup():
     os.makedirs(runs_timestamp_dir, exist_ok=True)
     os.makedirs(output_dir, exist_ok=True)
     return base_dir, runs_dir, runs_timestamp_dir, output_dir
-
-def print_title():
-    '''Print the Masgent ASCII banner and metadata inside a box.'''
-
-    # Retrieve installed version
-    try:
-        pkg_version = version('masgent')
-    except PackageNotFoundError:
-        pkg_version = 'dev'
-
-    # ASCII banner
-    ascii_banner = rf'''
-╔═════════════════════════════════════════════════════════════════════════╗
-║                                                                         ║
-║  ███╗   ███╗  █████╗  ███████╗  ██████╗  ███████╗ ███╗   ██╗ ████████╗  ║
-║  ████╗ ████║ ██╔══██╗ ██╔════╝ ██╔════╝  ██╔════╝ ████╗  ██║ ╚══██╔══╝  ║
-║  ██╔████╔██║ ███████║ ███████╗ ██║  ███╗ █████╗   ██╔██╗ ██║    ██║     ║
-║  ██║╚██╔╝██║ ██╔══██║ ╚════██║ ██║   ██║ ██╔══╝   ██║╚██╗██║    ██║     ║
-║  ██║ ╚═╝ ██║ ██║  ██║ ███████║ ╚██████╔╝ ███████╗ ██║ ╚████║    ██║     ║
-║  ╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚══════╝  ╚═════╝  ╚══════╝ ╚═╝  ╚═══╝    ╚═╝     ║
-║                                                                         ║
-║                                   MASGENT: Materials Simulation Agent   ║
-║                                      Copyright (c) 2025 Guangchen Liu   ║
-║                                                                         ║
-║  Version:         {pkg_version:<52}  ║
-║  Licensed:        MIT License                                           ║
-║  Repository:      https://github.com/aguang5241/masgent                 ║
-║  Citation:        Liu, G. et al. (2025), DOI:10.XXXX/XXXXX'             ║
-║  Contact:         gliu4@wpi.edu                                         ║
-║                                                                         ║
-╚═════════════════════════════════════════════════════════════════════════╝
-    '''
-    color_print(ascii_banner, 'yellow')

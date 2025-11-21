@@ -3,6 +3,24 @@ Masgent: Materials Simulation Agent
 
 ## Progress Record
 ### Features Implemented
+- Developed using pydantic-ai for AI agent framework
+- Implemented AI backend with OpenAI chat model
+- Integrated MPRester for Materials Project database access
+- Distributed as a Python package via TestPyPI
+- Robust system prompts to guide AI behavior
+- Strict input validation for all functions using Pydantic schemas
+- Comprehensive error handling and user prompts
+- API key management and validation for OpenAI and Materials Project
+- Color-coded terminal outputs for better user experience
+- Implemented logical workflow to switch between console and AI modes
+- Call AI assistant anytime during console mode for help or suggestions
+- Message history management to keep recent interactions to optimize performance
+
+### Features Planned
+- Expand toolset for more materials science tasks
+- Console mode functions for direct user interaction
+
+### Functions Implemented
 - Generate VASP POSCAR file from chemical formula
   - Validate chemical formula input
   - Support fetching structures from Materials Project database
@@ -38,7 +56,11 @@ Masgent: Materials Simulation Agent
     - `Interstitials`: add specified fraction or number of atoms of a given element
     - `Substitutions`: replace specified fraction or number of atoms of a given element with another element
 
-### Features Planned
+### Functions Planned
+- Generate script for HPC job submission
+  - Support job schedulers:
+    - SLURM
+
 - Generate SQS structures using icet
   - Support input parameters:
     - Supercell size

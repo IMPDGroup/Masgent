@@ -204,8 +204,8 @@ def command_1_1_3():
     result = tools.convert_structure_format(input=input)
     color_print(result, 'green')
 
-@register('1.1.5', 'Generate structure with defects (Vacancy, Interstitial, Substitution).')
-def command_1_1_5():
+@register('1.1.4', 'Generate structure with defects (Vacancy, Interstitial, Substitution).')
+def command_1_1_4():
     try:
         while True:
             choices = [
@@ -330,6 +330,36 @@ def command_1_1_5():
         defect_element=defect_element
         )
     result = tools.generate_vasp_poscar_with_defects(input=input)
+    color_print(result, 'green')
+
+@register('1.1.5', 'Generate supercell from POSCAR with specified scaling matrix.')
+def command_1_1_5():
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    try:
+        while True:
+            sm = color_input('\nEnter the scaling matrix (e.g., "2 0 0; 0 2 0; 0 0 2" for 2x2x2 supercell): ', 'yellow').strip()
+
+            if not sm:
+                continue
+            
+            try:
+                schemas.GenerateSupercellFromPoscar(poscar_path=poscar_path, scaling_matrix=sm)
+                break
+
+            except Exception:
+                color_print(f'[Error] Invalid scaling matrix: {sm}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    input = schemas.GenerateSupercellFromPoscar(poscar_path=poscar_path, scaling_matrix=sm)
+    result = tools.generate_supercell_from_poscar(input=input)
     color_print(result, 'green')
 
 @register('1.2.2', 'Generate KPOINTS with specified accuracy.')

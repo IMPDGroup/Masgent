@@ -199,6 +199,7 @@ def main():
             tools.convert_structure_format,
             tools.convert_poscar_coordinates,
             tools.generate_vasp_poscar_with_defects,
+            tools.generate_supercell_from_poscar,
         ],
         history_processors=[keep_recent_messages],
         )

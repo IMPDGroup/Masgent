@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-import os, sys, datetime
+import os, sys, datetime, shutil
 import tabulate
 from pathlib import Path
 from colorama import Fore, Style
@@ -112,13 +112,19 @@ def ask_for_mp_api_key():
 def os_path_setup():
     '''Set up base and target directories for VASP input files.'''
     base_dir = os.getcwd()
-    runs_dir = os.path.join(base_dir, 'masgent_runs')
     output_dir = os.path.join(base_dir, 'masgent_outputs')
-    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    runs_timestamp_dir = os.path.join(runs_dir, f'runs_{timestamp}')
-    os.makedirs(runs_timestamp_dir, exist_ok=True)
     os.makedirs(output_dir, exist_ok=True)
-    return base_dir, runs_dir, runs_timestamp_dir, output_dir
+
+    # If there are files in the output directory, archive them with a timestamp (copy rather than delete)
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    if os.listdir(output_dir):
+        archive_dir = os.path.join(base_dir, f'masgent_archive/archive_{timestamp}')
+        os.makedirs(archive_dir, exist_ok=True)
+        for file_name in os.listdir(output_dir):
+            src_file = os.path.join(output_dir, file_name)
+            dst_file = os.path.join(archive_dir, file_name)
+            shutil.copy2(src_file, dst_file)
+    return base_dir, output_dir
 
 def print_banner():
     try:
@@ -161,8 +167,8 @@ def print_help():
         ['1.1.1', 'Generate POSCAR from chemical formula'],
         ['1.1.2', 'Convert POSCAR coordinates (Direct <-> Cartesian)'],
         ['1.1.3', 'Convert structure file formats (CIF, POSCAR, XYZ)'],
-        # ['1.1.4', 'Generate supercells'],
-        ['1.1.5', 'Generate structures with defects (Vacancies, Interstitials, Substitutions)'],
+        ['1.1.4', 'Generate structures with defects (Vacancies, Interstitials, Substitutions)'],
+        # ['1.1.5', 'Generate supercells'],
         # ['1.1.6', 'Generate special quasirandom structures (SQS)'],
         # ['1.1.7', 'Generate surface slabs'],
         # ['1.1.8', 'Generate interface structures'],

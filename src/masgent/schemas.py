@@ -348,3 +348,43 @@ class GenerateVaspPoscarWithDefects(BaseModel):
 
         return self
 
+class GenerateSupercellFromPoscar(BaseModel):
+    '''
+    Schema for generating supercell from POSCAR file.
+    '''
+    poscar_path: str = Field(
+        ...,
+        description='Path to the POSCAR file. Must exist.'
+    )
+
+    scaling_matrix: str = Field(
+        ...,
+        description='Scaling matrix as a string, e.g., "2 0 0; 0 2 0; 0 0 2" for a 2x2x2 supercell.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure POSCAR exists
+        if not os.path.isfile(self.poscar_path):
+            raise ValueError(f'POSCAR file not found: {self.poscar_path}')
+        
+        # ensure the poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid POSCAR file: {self.poscar_path}')
+        
+        # ensure scaling_matrix is 3x3 with integer entries
+        sm = self.scaling_matrix
+        try:
+            scaling_matrix = [
+                [int(num) for num in line.strip().split()] 
+                for line in sm.split(';')
+                ]
+            if len(scaling_matrix) != 3 or any(len(row) != 3 for row in scaling_matrix):
+                raise ValueError('Scaling matrix must be 3x3.')
+            
+        except Exception:
+            raise ValueError('Scaling matrix must be a 3x3 matrix with integer entries.')
+
+        return self

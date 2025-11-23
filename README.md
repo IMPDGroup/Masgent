@@ -2,21 +2,17 @@
 Masgent: Materials Simulation Agent
 
 ## Features
-- Developed using pydantic-ai for AI agent framework
-- Implemented AI backend with OpenAI chat model
-- Integrated MPRester for Materials Project database access
-- Distributed as a Python package via TestPyPI
+- AI agent (Pydantic AI + OpenAI)
+- Materials Project access
+- Distributed as a Python package
 - Robust system prompts to guide AI behavior
-- Strict input validation for all functions using Pydantic schemas
-- Comprehensive error handling and user prompts
-- API key management and validation for OpenAI and Materials Project
-- Color-coded terminal outputs for better user experience
-- Console mode functions for direct user interaction
-- Implemented logical workflow to switch between console and AI modes
-- Call AI assistant anytime during console mode for help or suggestions
-- Optimized the history management (trimming old messages) for better performance
-- Detailed navigation instructions and help messages for users
-- Interactive command selection menu using Bullet library
+- Strict input validation (Pydantic schemas)
+- API key management and validation
+- Interactive command selection menu (Bullet)
+- Color-coded terminal interface (Colorama)
+- AI standby for instant assistance
+- Smart memory management
+- Detailed user guidance
 
 ## Progress Record
 - 1. Density Functional Theory (DFT) Simulations

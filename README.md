@@ -1,8 +1,7 @@
 # Masgent
 Masgent: Materials Simulation Agent
 
-## Progress Record
-### Features Implemented
+## Features
 - Developed using pydantic-ai for AI agent framework
 - Implemented AI backend with OpenAI chat model
 - Integrated MPRester for Materials Project database access
@@ -19,67 +18,33 @@ Masgent: Materials Simulation Agent
 - Detailed navigation instructions and help messages for users
 - Interactive command selection menu using Bullet library
 
-### Features Planned
-- Expand toolset for more materials science tasks
+## Progress Record
+- 1. Density Functional Theory (DFT) Simulations
+  - 1.1 Structure Preparation & Manipulation
+    - 1.1.1 Generate POSCAR from chemical formula
+    - 1.1.2 Convert POSCAR coordinates (Direct <-> Cartesian)
+    - 1.1.3 Convert structure file formats (CIF, POSCAR, XYZ)
+    - 1.1.5 Generate structures with defects (Vacancies, Interstitials, Substitutions)
+    - 1.1.6 (Planned) Generate supercells
+    - 1.1.7 (Planned) Generate special quasirandom structures (SQS)
+    - 1.1.8 (Planned) Generate surface slabs
+    - 1.1.9 (Planned) Generate interface structures
+  
+  - 1.2 VASP Input File Preparation
+    - 1.2.1 (Planned) Generate INCAR templates (relaxation, static, MD, etc.)
+    - 1.2.2 Generate KPOINTS with specified accuracy
+    - 1.2.3 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)
+    - 1.2.4 (Planned) Generate HPC job submission script
+    - 1.2.5 (Planned) Generate standard VASP calculation workflows
+      - 1.2.5.1 (Planned) Convergence testing (ENCUT, KPOINTS)
+      - 1.2.5.2 (Planned) Equation of State (EOS)
+      - 1.2.5.3 (Planned) Elastic constants
+  
+  - 1.3 VASP Output Analysis
 
-### Functions Implemented
-- Generate VASP POSCAR file from chemical formula
-  - Validate chemical formula input
-  - Support fetching structures from Materials Project database
+- 2. Machine Learning Potentials (MLP)
 
-- Generate suggested VASP input files (INCAR, KPOINTS, POTCAR)
-  - Support calculations:
-    - `MPRelaxSet`: for relaxation calculations
-    - `MPStaticSet`: for static calculations
-    - `MPNonSCFSet`: for non-self-consistent field calculations
-    - `MPScanRelaxSet`: for r2scan relaxation calculations
-    - `MPScanStaticSet`: for r2scan static calculations
-    - `MPMDSet`: for molecular dynamics simulations
-
-- Customize KPOINTS file for provided POSCAR with specified accuracy level
-  - Support accuracy levels:
-    - `Low`
-    - `Medium`
-    - `High`
-
-- Convert structures between different formats (CIF, POSCAR, XYZ, etc.)
-  - Support conversions:
-    - `POSCAR` <-> `CIF`
-    - `POSCAR` <-> `XYZ`
-    - `CIF` <-> `XYZ`
-
-- Convert POSCAR between direct and cartesian coordinates
-  - Support conversions:
-    - `Direct` <-> `Cartesian`
-
-- Generate defects in crystal structures
-  - Support defect types:
-    - `Vacancies`: remove specified fraction or number of atoms of a given element
-    - `Interstitials`: add specified fraction or number of atoms of a given element
-    - `Substitutions`: replace specified fraction or number of atoms of a given element with another element
-
-### Functions Planned
-- Generate script for HPC job submission
-  - Support job schedulers:
-    - SLURM
-
-- Generate SQS structures using icet
-  - Support input parameters:
-    - Supercell size
-    - Correlation functions
-    - Number of iterations
-
-- Generate surface slabs from bulk structures
-  - Support input parameters:
-    - Miller indices
-    - Slab thickness
-    - Vacuum size
-
-- Generate interfaces between two materials
-  - Support input parameters:
-    - Lattice matching criteria
-    - Interface orientation
-    - Separation distance
+- 3. Machine Learning Model Training & Evaluation
 
 ## Local Debugging and Testing
 ```bash

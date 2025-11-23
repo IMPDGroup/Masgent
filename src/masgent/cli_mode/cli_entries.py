@@ -5,24 +5,8 @@ from bullet import Bullet, colors
 
 from masgent.ai_mode import ai_backend
 from masgent.utils import color_print, print_banner, print_help
+from masgent.cli_mode.cli_run import register, run_command
 
-COMMANDS = {}
-
-def register(code, func):
-    def decorator(func):
-        COMMANDS[code] = {
-            'function': func,
-            'description': func.__doc__ or ''
-        }
-        return func
-    return decorator
-
-def run_command(code):
-    cmd = COMMANDS.get(code)
-    if cmd:
-        cmd['function']()
-    else:
-        color_print(f'[Error] Invalid command code: {code}\n', 'red')
 
 ###############################################
 #                                             #

@@ -6,25 +6,37 @@ from bullet import Bullet, colors
 from masgent import tools, schemas
 from masgent.ai_mode import ai_backend
 from masgent.utils import color_print, color_input, print_help
-from masgent.cli_mode.cli_entries import register, run_command
+
+COMMANDS = {}
+
+def register(code, func):
+    def decorator(func):
+        COMMANDS[code] = {
+            'function': func,
+            'description': func.__doc__ or ''
+        }
+        return func
+    return decorator
+
+def run_command(code):
+    cmd = COMMANDS.get(code)
+    if cmd:
+        cmd['function']()
+    else:
+        color_print(f'[Error] Invalid command code: {code}\n', 'red')
 
 def check_poscar():
-    try:
-        while True:
-            poscar_path = color_input('\nEnter path to input structure file: ', 'yellow').strip()
+    while True:
+        poscar_path = color_input('\nEnter path to input structure file: ', 'yellow').strip()
 
-            if not poscar_path:
-                continue
-            
-            try:
-                schemas.CheckPoscar(poscar_path=poscar_path)
-                return poscar_path
-            except Exception:
-                color_print(f'[Error] Invalid POSCAR: {poscar_path}, please double check and try again.\n', 'red')
-
-    except (KeyboardInterrupt, EOFError):
-        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
-        return
+        if not poscar_path:
+            continue
+        
+        try:
+            schemas.CheckPoscar(poscar_path=poscar_path)
+            return poscar_path
+        except Exception:
+            color_print(f'[Error] Invalid POSCAR: {poscar_path}, please double check and try again.\n', 'red')
 
 #############################################
 #                                           #
@@ -32,7 +44,7 @@ def check_poscar():
 #                                           #
 #############################################
 
-@register('1.1.1', 'Generate VASP POSCAR file from user inputs or from Materials Project database.')
+@register('1.1.1', 'Generate POSCAR from chemical formula.')
 def command_1_1_1():
     try: 
         while True:
@@ -55,131 +67,8 @@ def command_1_1_1():
     result = tools.generate_vasp_poscar(input=input)
     color_print(result, 'green')
 
-
-@register('1.1.2', 'Generate VASP KPOINTS with specified accuracy.')
-def command_001():
-    try:
-        while True:
-            choices = [
-                'Low     ->  Suitable for preliminary calculations, grid density = 1000 / number of atoms',
-                'Medium  ->  Balanced accuracy and computational cost, grid density = 3000 / number of atoms',
-                'High    ->  High accuracy for production runs, grid density = 5000 / number of atoms',
-                '',
-                '--- Global Commands ---',
-                'AI',
-                'Back',
-                'Main',
-                'Help',
-                'Exit',
-            ]
-            cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
-            user_input = cli.launch()
-
-            if user_input.strip() == '' or user_input.startswith('---'):
-                continue
-
-            if user_input == 'AI':
-                ai_backend.main()
-            elif user_input == 'Back':
-                return
-            elif user_input == 'Main':
-                run_command('0')
-            elif user_input == 'Help':
-                print_help()
-            elif user_input == 'Exit':
-                color_print('\nExiting Masgent... Goodbye!\n', 'green')
-                sys.exit(0)
-            elif user_input.startswith('Low'):
-                accuracy_level = 'Low'
-                break
-            elif user_input.startswith('Medium'):
-                accuracy_level = 'Medium'
-                break
-            elif user_input.startswith('High'):
-                accuracy_level = 'High'
-                break
-            else:
-                pass
-    
-    except (KeyboardInterrupt, EOFError):
-        color_print('\nExiting Masgent... Goodbye!\n', 'green')
-        sys.exit(0)
-
-    poscar_path = check_poscar()
-
-    input = schemas.CustomizeVaspKpointsWithAccuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
-    result = tools.customize_vasp_kpoints_with_accuracy(input=input)
-    color_print(result, 'green')
-
-@register('1.1.3', 'Generate VASP input files (INCAR, KPOINTS, POTCAR) using pymatgen input sets.')
-def command_1_1_3():
-    try:
-        while True:
-            choices = [
-                'MPRelaxSet       ->   suggested for structure relaxation',
-                'MPStaticSet      ->   suggested for static calculations',
-                'MPNonSCFSet      ->   suggested for non-self-consistent field calculations',
-                'MPScanRelaxSet   ->   suggested for structure relaxation with r2SCAN functional',
-                'MPScanStaticSet  ->   suggested for static calculations with r2SCAN functional',
-                'MPMDSet          ->   suggested for molecular dynamics simulations',
-                '',
-                '--- Global Commands ---',
-                'AI',
-                'Back',
-                'Main',
-                'Help',
-                'Exit',
-            ]
-            cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
-            user_input = cli.launch()
-
-            if user_input.strip() == '' or user_input.startswith('---'):
-                continue
-
-            if user_input == 'AI':
-                ai_backend.main()
-            elif user_input == 'Back':
-                return
-            elif user_input == 'Main':
-                run_command('0')
-            elif user_input == 'Help':
-                print_help()
-            elif user_input == 'Exit':
-                color_print('\nExiting Masgent... Goodbye!\n', 'green')
-                sys.exit(0)
-            elif user_input.startswith('MPRelaxSet'):
-                vasp_input_sets = 'MPRelaxSet'
-                break
-            elif user_input.startswith('MPStaticSet'):
-                vasp_input_sets = 'MPStaticSet'
-                break
-            elif user_input.startswith('MPNonSCFSet'):
-                vasp_input_sets = 'MPNonSCFSet'
-                break
-            elif user_input.startswith('MPScanRelaxSet'):
-                vasp_input_sets = 'MPScanRelaxSet'
-                break
-            elif user_input.startswith('MPScanStaticSet'):
-                vasp_input_sets = 'MPScanStaticSet'
-                break
-            elif user_input.startswith('MPMDSet'):
-                vasp_input_sets = 'MPMDSet'
-                break
-            else:
-                pass
-    
-    except (KeyboardInterrupt, EOFError):
-        color_print('\nExiting Masgent... Goodbye!\n', 'green')
-        sys.exit(0)
-    
-    poscar_path = check_poscar()
-
-    input = schemas.GenerateVaspInputsFromPoscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets)
-    result = tools.generate_vasp_inputs_from_poscar(input=input)
-    color_print(result, 'green')
-
-@register('1.1.4', 'Convert POSCAR between direct and cartesian coordinates.')
-def command_1_1_4():
+@register('1.1.2', 'Convert POSCAR coordinates (Direct <-> Cartesian).')
+def command_1_1_2():
     try:
         while True:
             choices = [
@@ -223,14 +112,18 @@ def command_1_1_4():
         color_print('\nExiting Masgent... Goodbye!\n', 'green')
         sys.exit(0)
 
-    poscar_path = check_poscar()
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
 
     input = schemas.ConvertPoscarCoordinatesSchema(poscar_path=poscar_path, to_cartesian=to_cartesian)
     result = tools.convert_poscar_coordinates(input=input)
     color_print(result, 'green')
 
-@register('1.1.5', 'Convert structure file formats (CIF, POSCAR, XYZ).')
-def command_1_1_5():
+@register('1.1.3', 'Convert structure file formats (CIF, POSCAR, XYZ).')
+def command_1_1_3():
     try:
         while True:
             choices = [
@@ -265,22 +158,22 @@ def command_1_1_5():
             elif user_input == 'Exit':
                 color_print('\nExiting Masgent... Goodbye!\n', 'green')
                 sys.exit(0)
-            elif user_input.startswith('POSCAR') and input_path.endswith('CIF'):
+            elif user_input.startswith('POSCAR') and user_input.endswith('CIF'):
                 input_format, output_format = 'POSCAR', 'CIF'
                 break
-            elif user_input.startswith('POSCAR') and input_path.endswith('XYZ'):
+            elif user_input.startswith('POSCAR') and user_input.endswith('XYZ'):
                 input_format, output_format = 'POSCAR', 'XYZ'
                 break
-            elif user_input.startswith('CIF') and input_path.endswith('POSCAR'):
+            elif user_input.startswith('CIF') and user_input.endswith('POSCAR'):
                 input_format, output_format = 'CIF', 'POSCAR'
                 break
-            elif user_input.startswith('CIF') and input_path.endswith('XYZ'):
+            elif user_input.startswith('CIF') and user_input.endswith('XYZ'):
                 input_format, output_format = 'CIF', 'XYZ'
                 break
-            elif user_input.startswith('XYZ') and input_path.endswith('POSCAR'):
+            elif user_input.startswith('XYZ') and user_input.endswith('POSCAR'):
                 input_format, output_format = 'XYZ', 'POSCAR'
                 break
-            elif user_input.startswith('XYZ') and input_path.endswith('CIF'):
+            elif user_input.startswith('XYZ') and user_input.endswith('CIF'):
                 input_format, output_format = 'XYZ', 'CIF'
                 break
             else:
@@ -311,8 +204,8 @@ def command_1_1_5():
     result = tools.convert_structure_format(input=input)
     color_print(result, 'green')
 
-@register('1.1.6', 'Generate VASP POSCAR with defects (vacancies, interstitials, substitutions).')
-def command_1_1_6():
+@register('1.1.5', 'Generate structure with defects (Vacancy, Interstitial, Substitution).')
+def command_1_1_5():
     try:
         while True:
             choices = [
@@ -360,7 +253,11 @@ def command_1_1_6():
         color_print('\nExiting Masgent... Goodbye!\n', 'green')
         sys.exit(0)
     
-    poscar_path = check_poscar()
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
     
     try:
         while True:
@@ -433,4 +330,134 @@ def command_1_1_6():
         defect_element=defect_element
         )
     result = tools.generate_vasp_poscar_with_defects(input=input)
+    color_print(result, 'green')
+
+@register('1.2.2', 'Generate KPOINTS with specified accuracy.')
+def command_1_2_2():
+    try:
+        while True:
+            choices = [
+                'Low     ->  Suitable for preliminary calculations, grid density = 1000 / number of atoms',
+                'Medium  ->  Balanced accuracy and computational cost, grid density = 3000 / number of atoms',
+                'High    ->  High accuracy for production runs, grid density = 5000 / number of atoms',
+                '',
+                '--- Global Commands ---',
+                'AI',
+                'Back',
+                'Main',
+                'Help',
+                'Exit',
+            ]
+            cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
+            user_input = cli.launch()
+
+            if user_input.strip() == '' or user_input.startswith('---'):
+                continue
+
+            if user_input == 'AI':
+                ai_backend.main()
+            elif user_input == 'Back':
+                return
+            elif user_input == 'Main':
+                run_command('0')
+            elif user_input == 'Help':
+                print_help()
+            elif user_input == 'Exit':
+                color_print('\nExiting Masgent... Goodbye!\n', 'green')
+                sys.exit(0)
+            elif user_input.startswith('Low'):
+                accuracy_level = 'Low'
+                break
+            elif user_input.startswith('Medium'):
+                accuracy_level = 'Medium'
+                break
+            elif user_input.startswith('High'):
+                accuracy_level = 'High'
+                break
+            else:
+                pass
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\nExiting Masgent... Goodbye!\n', 'green')
+        sys.exit(0)
+
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+
+    input = schemas.CustomizeVaspKpointsWithAccuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
+    result = tools.customize_vasp_kpoints_with_accuracy(input=input)
+    color_print(result, 'green')
+
+@register('1.2.3', 'Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR).')
+def command_1_2_3():
+    try:
+        while True:
+            choices = [
+                'MPRelaxSet       ->   suggested for structure relaxation',
+                'MPStaticSet      ->   suggested for static calculations',
+                'MPNonSCFSet      ->   suggested for non-self-consistent field calculations',
+                'MPScanRelaxSet   ->   suggested for structure relaxation with r2SCAN functional',
+                'MPScanStaticSet  ->   suggested for static calculations with r2SCAN functional',
+                'MPMDSet          ->   suggested for molecular dynamics simulations',
+                '',
+                '--- Global Commands ---',
+                'AI',
+                'Back',
+                'Main',
+                'Help',
+                'Exit',
+            ]
+            cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
+            user_input = cli.launch()
+
+            if user_input.strip() == '' or user_input.startswith('---'):
+                continue
+
+            if user_input == 'AI':
+                ai_backend.main()
+            elif user_input == 'Back':
+                return
+            elif user_input == 'Main':
+                run_command('0')
+            elif user_input == 'Help':
+                print_help()
+            elif user_input == 'Exit':
+                color_print('\nExiting Masgent... Goodbye!\n', 'green')
+                sys.exit(0)
+            elif user_input.startswith('MPRelaxSet'):
+                vasp_input_sets = 'MPRelaxSet'
+                break
+            elif user_input.startswith('MPStaticSet'):
+                vasp_input_sets = 'MPStaticSet'
+                break
+            elif user_input.startswith('MPNonSCFSet'):
+                vasp_input_sets = 'MPNonSCFSet'
+                break
+            elif user_input.startswith('MPScanRelaxSet'):
+                vasp_input_sets = 'MPScanRelaxSet'
+                break
+            elif user_input.startswith('MPScanStaticSet'):
+                vasp_input_sets = 'MPScanStaticSet'
+                break
+            elif user_input.startswith('MPMDSet'):
+                vasp_input_sets = 'MPMDSet'
+                break
+            else:
+                pass
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\nExiting Masgent... Goodbye!\n', 'green')
+        sys.exit(0)
+    
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+
+    input = schemas.GenerateVaspInputsFromPoscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets)
+    result = tools.generate_vasp_inputs_from_poscar(input=input)
     color_print(result, 'green')

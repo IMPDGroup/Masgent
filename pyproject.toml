@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "masgent"
-version = "0.2.1"
+version = "0.2.2"
 description = "Masgent: Materials Simulation Agent"
 readme = "README.md"
 authors = [{name = "Guangchen Liu", email = "gliu4@wpi.edu"}]

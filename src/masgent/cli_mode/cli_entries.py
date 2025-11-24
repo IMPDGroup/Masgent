@@ -102,7 +102,7 @@ def command_1_1():
                 '1.1.1 Generate POSCAR from chemical formula',
                 '1.1.2 Convert POSCAR coordinates (Direct <-> Cartesian)',
                 '1.1.3 Convert structure file formats (CIF, POSCAR, XYZ)',
-                '1.1.4 Generate structures with defects (Vacancies, Interstitials, Substitutions)',
+                '1.1.4 Generate structures with defects (Vacancies, Substitutions, Interstitials with Voronoi)',
                 '1.1.5 Generate supercells',
                 '1.1.6 Generate special quasirandom structures (SQS)',
                 '1.1.7 Generate surface slabs',
@@ -150,9 +150,9 @@ def command_1_2():
     try:
         while True:
             choices = [
-                '1.2.1 Generate INCAR templates (relaxation, static, MD, etc.)',
-                '1.2.2 Gernerate KPOINTS with specified accuracy',
-                '1.2.3 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)',
+                '1.2.1 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)',
+                '1.2.2 Generate INCAR templates (relaxation, static, MD, etc.)',
+                '1.2.3 Gernerate KPOINTS with specified accuracy',
                 '1.2.4 Generate HPC job submission script',
                 '1.2.5 Generate standard VASP calculation workflows',
             ] + global_commands()

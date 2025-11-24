@@ -189,9 +189,9 @@ def command_1_1_4():
     try:
         while True:
             choices = [
-                'Vacancy       ->  Remove atoms of a selected element',
-                'Interstitial  ->  Add atoms to interstitial positions',
-                'Substitution  ->  Replace atoms with another element',
+                'Vacancy                 ->  Randomly remove atoms of a selected element',
+                'Substitution            ->  Randomly substitute atoms of a selected element with defect element',
+                'Interstitial (Voronoi)  ->  Add atoms at interstitial sites using Voronoi method',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()
@@ -210,8 +210,8 @@ def command_1_1_4():
             elif user_input.startswith('Vacancy'):
                 defect_type = 'vacancy'
                 break
-            elif user_input.startswith('Interstitial'):
-                defect_type = 'interstitial'
+            elif user_input.startswith('Interstitial (Voronoi)'):
+                defect_type = 'interstitial (Voronoi)'
                 break
             elif user_input.startswith('Substitution'):
                 defect_type = 'substitution'
@@ -236,7 +236,7 @@ def command_1_1_4():
                 defect_element = None
                 if not original_element:
                     continue
-            elif defect_type == 'interstitial':
+            elif defect_type == 'interstitial (Voronoi)':
                 original_element = None
                 defect_element = color_input('\nEnter the defect element to add (e.g., Na): ', 'yellow').strip()
                 if not defect_element:
@@ -265,6 +265,18 @@ def command_1_1_4():
 
     try:
         while True:
+            if defect_type == 'interstitial (Voronoi)':
+                defect_amount = None
+
+                schemas.GenerateVaspPoscarWithDefects(
+                    poscar_path=poscar_path,
+                    defect_type=defect_type,
+                    original_element=original_element,
+                    defect_amount=defect_amount,
+                    defect_element=defect_element,
+                )
+                break
+
             defect_amount_str = color_input('\nEnter the defect amount (fraction between 0 and 1, or atom count >=1): ', 'yellow').strip()
 
             if not defect_amount_str:
@@ -332,57 +344,8 @@ def command_1_1_5():
     result = tools.generate_supercell_from_poscar(input=input)
     color_print(result, 'green')
 
-@register('1.2.2', 'Generate KPOINTS with specified accuracy.')
-def command_1_2_2():
-    try:
-        while True:
-            choices = [
-                'Low     ->  Suitable for preliminary calculations, grid density = 1000 / number of atoms',
-                'Medium  ->  Balanced accuracy and computational cost, grid density = 3000 / number of atoms',
-                'High    ->  High accuracy for production runs, grid density = 5000 / number of atoms',
-            ] + global_commands()
-            cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
-            user_input = cli.launch()
-
-            if user_input.startswith('AI'):
-                ai_backend.main()
-            elif user_input.startswith('Back'):
-                return
-            elif user_input.startswith('Main'):
-                run_command('0')
-            elif user_input.startswith('Help'):
-                print_help()
-            elif user_input.startswith('Exit'):
-                color_print('\nExiting Masgent... Goodbye!\n', 'green')
-                sys.exit(0)
-            elif user_input.startswith('Low'):
-                accuracy_level = 'Low'
-                break
-            elif user_input.startswith('Medium'):
-                accuracy_level = 'Medium'
-                break
-            elif user_input.startswith('High'):
-                accuracy_level = 'High'
-                break
-            else:
-                continue
-    
-    except (KeyboardInterrupt, EOFError):
-        color_print('\nExiting Masgent... Goodbye!\n', 'green')
-        sys.exit(0)
-
-    try:
-        poscar_path = check_poscar()
-    except (KeyboardInterrupt, EOFError):
-        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
-        return
-
-    input = schemas.CustomizeVaspKpointsWithAccuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
-    result = tools.customize_vasp_kpoints_with_accuracy(input=input)
-    color_print(result, 'green')
-
-@register('1.2.3', 'Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR).')
-def command_1_2_3():
+@register('1.2.1', 'Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR).')
+def command_1_2_1():
     try:
         while True:
             choices = [
@@ -440,4 +403,53 @@ def command_1_2_3():
 
     input = schemas.GenerateVaspInputsFromPoscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets)
     result = tools.generate_vasp_inputs_from_poscar(input=input)
+    color_print(result, 'green')
+
+@register('1.2.3', 'Generate KPOINTS with specified accuracy.')
+def command_1_2_3():
+    try:
+        while True:
+            choices = [
+                'Low     ->  Suitable for preliminary calculations, grid density = 1000 / number of atoms',
+                'Medium  ->  Balanced accuracy and computational cost, grid density = 3000 / number of atoms',
+                'High    ->  High accuracy for production runs, grid density = 5000 / number of atoms',
+            ] + global_commands()
+            cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
+            user_input = cli.launch()
+
+            if user_input.startswith('AI'):
+                ai_backend.main()
+            elif user_input.startswith('Back'):
+                return
+            elif user_input.startswith('Main'):
+                run_command('0')
+            elif user_input.startswith('Help'):
+                print_help()
+            elif user_input.startswith('Exit'):
+                color_print('\nExiting Masgent... Goodbye!\n', 'green')
+                sys.exit(0)
+            elif user_input.startswith('Low'):
+                accuracy_level = 'Low'
+                break
+            elif user_input.startswith('Medium'):
+                accuracy_level = 'Medium'
+                break
+            elif user_input.startswith('High'):
+                accuracy_level = 'High'
+                break
+            else:
+                continue
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\nExiting Masgent... Goodbye!\n', 'green')
+        sys.exit(0)
+
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+
+    input = schemas.CustomizeVaspKpointsWithAccuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
+    result = tools.customize_vasp_kpoints_with_accuracy(input=input)
     color_print(result, 'green')

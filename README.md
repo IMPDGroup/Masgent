@@ -27,9 +27,9 @@ Masgent: Materials Simulation Agent
     - 1.1.8 (Planned) Generate interface structures
   
   - 1.2 VASP Input File Preparation
-    - 1.2.1 (Planned) Generate INCAR templates (relaxation, static, MD, etc.)
-    - 1.2.2 Generate KPOINTS with specified accuracy
-    - 1.2.3 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)
+    - 1.2.1 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)
+    - 1.2.2 (Planned) Generate INCAR templates (relaxation, static, MD, etc.)
+    - 1.2.3 Generate KPOINTS with specified accuracy
     - 1.2.4 (Planned) Generate HPC job submission script
     - 1.2.5 (Planned) Generate standard VASP calculation workflows
       - 1.2.5.1 (Planned) Convergence testing (ENCUT, KPOINTS)

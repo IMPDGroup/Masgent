@@ -2,6 +2,7 @@
 masgent_archive/
 masgent_outputs/
 testing_venv/
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

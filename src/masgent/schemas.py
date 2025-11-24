@@ -265,7 +265,7 @@ class CustomizeVaspKpointsWithAccuracy(BaseModel):
     
 class GenerateVaspPoscarWithDefects(BaseModel):
     '''
-    Schema for generating VASP POSCAR with defects: vacancies, interstitials, substitutions.
+    Schema for generating VASP POSCAR with defects: vacancies, substitutions, and interstitials with Voronoi method.
     '''
     poscar_path: str = Field(
         ...,
@@ -273,25 +273,25 @@ class GenerateVaspPoscarWithDefects(BaseModel):
     )
 
     defect_type: Literal[
-        'vacancy', 'interstitial', 'substitution'
+        'vacancy', 'substitution', 'interstitial (Voronoi)'
         ] = Field(
             ...,
-            description='Type of defect to introduce. Must be one of vacancy, interstitial, or substitution.'
+            description='Type of defect to introduce. Must be one of vacancy, substitution or interstitial (Voronoi).'
         )
     
     original_element: Optional[str] = Field(
         None,
-        description='Element symbol of the atom to be operated on. Must provide for defect types vacancy and substitution. Must be None for interstitial.'
+        description='Element symbol of the atom to be operated on. Must provide for defect types vacancy and substitution. Must be None for interstitial (Voronoi).'
     )
 
-    defect_amount: float | int = Field(
+    defect_amount: Optional[float | int] = Field(
         ...,
-        description='Amount of defect to introduce. Either a fraction (0 < x < 1) of the total number of original_element atoms, or an integer count (>= 1).'
+        description='Amount of defect to introduce. Either a fraction (0 < x < 1) of the total number of original_element atoms, or an integer count (>= 1). Must provide for defect types vacancy and substitution. Must be None for interstitial (Voronoi).'
     )
 
     defect_element: Optional[str] = Field(
         None,
-        description='Element symbol of the defect atom. Must provide for defect types interstitial and substitution.'
+        description='Element symbol of the defect atom. Must provide for defect types interstitial (Voronoi) and substitution.'
     )
 
     @model_validator(mode='after')
@@ -310,24 +310,37 @@ class GenerateVaspPoscarWithDefects(BaseModel):
         if self.defect_type in {'vacancy', 'substitution'} and not self.original_element:
             raise ValueError(f'Original element must be provided for vacancy/substitution defect types.')
 
-        # ensure original_element is None for interstitial
-        if self.defect_type == 'interstitial' and self.original_element is not None:
-            raise ValueError('Original element must be None for interstitial defect type.')
+        # ensure original_element is None for interstitial (Voronoi)
+        if self.defect_type == 'interstitial (Voronoi)' and self.original_element is not None:
+            raise ValueError('Original element must be None for interstitial (Voronoi) defect type.')
         
-        # for interstitials and substitutions, defect_element must be provided
-        if self.defect_type in {'interstitial', 'substitution'} and not self.defect_element:
+        # for interstitials (Voronoi) and substitutions, defect_element must be provided
+        if self.defect_type in {'interstitial (Voronoi)', 'substitution'} and not self.defect_element:
             raise ValueError(f'Defect element must be provided for interstitial/substitution defect types.')
         
-        # ensure defect_amount is valid
-        df = self.defect_amount
-        if isinstance(df, float):
-            if not (0 < df < 1):
-                raise ValueError('Defect amount as a fraction must be between 0 and 1.')
-        elif isinstance(df, int):
-            if df < 1:
-                raise ValueError('Defect amount as an integer must be at least 1.')
-        else:
-            raise ValueError('Defect amount must be either a fraction between 0 and 1, or an integer >= 1.')
+        # for vacancies, defect_element must be None
+        if self.defect_type == 'vacancy' and self.defect_element is not None:
+            raise ValueError('Defect element must be None for vacancy defect type.')
+        
+        # ensure defect_amount is provided for vacancy and substitution
+        if self.defect_type in {'vacancy', 'substitution'} and self.defect_amount is None:
+            raise ValueError('Defect amount must be provided for vacancy and substitution defect types.')
+        
+        # ensure defect_amount is None for interstitial (Voronoi)
+        if self.defect_type == 'interstitial (Voronoi)' and self.defect_amount is not None:
+            raise ValueError('Defect amount must be None for interstitial (Voronoi) defect type.')
+        
+        # ensure defect_amount is valid for vacancy and substitution
+        if self.defect_type in {'vacancy', 'substitution'}:
+            df = self.defect_amount
+            if isinstance(df, float):
+                if not (0 < df < 1):
+                    raise ValueError('Defect amount as a fraction must be between 0 and 1.')
+            elif isinstance(df, int):
+                if df < 1:
+                    raise ValueError('Defect amount as an integer must be at least 1.')
+            else:
+                raise ValueError('Defect amount must be either a fraction between 0 and 1, or an integer >= 1.')
         
         # validate original_element and defect_element
         if self.original_element:
@@ -339,7 +352,8 @@ class GenerateVaspPoscarWithDefects(BaseModel):
             # ensure original_element exists in the POSCAR structure
             if self.original_element not in {str(site.specie) for site in structure.sites}:
                 raise ValueError(f'Original element {self.original_element} does not exist in POSCAR structure.')
-            
+
+        # validate defect_element
         if self.defect_element:
             try:
                 Element(self.defect_element)

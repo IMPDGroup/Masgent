@@ -98,15 +98,15 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
 6. **Testing in a New Environment**:
     - Create a new virtual environment and activate it:
       ```bash
-      python3 -m venv test_env
-      source test_env/bin/activate
+      python3 -m venv testing_venv
+      source testing_venv/bin/activate
       ```
     - Install the newly published version of Masgent from TestPyPI:
       ```bash
       pip install \
       --index-url https://test.pypi.org/simple \
       --extra-index-url https://pypi.org/simple \
-      masgent==0.1.6
+      masgent==0.2.7
       ```
     - Reset the virtual environment by uninstalling all packages
       ```bash

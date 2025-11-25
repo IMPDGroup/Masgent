@@ -8,10 +8,55 @@ from mp_api.client import MPRester
 from openai import OpenAI
 from importlib.metadata import version, PackageNotFoundError
 
+# Optional session runs directory
+_SESSION_RUNS_DIR = None
+
+def set_session_runs_dir(path: str):
+    '''Set the session runs directory.'''
+    global _SESSION_RUNS_DIR
+    _SESSION_RUNS_DIR = path
+
+def start_new_session():
+    '''Set up a new session runs directory.'''
+    try:
+        base_dir, main_dir, runs_dir = os_path_setup()
+        color_print(f'[Info] New Masgent session runs directory: {runs_dir}\n', 'green')
+        try:
+            set_session_runs_dir(runs_dir)
+        except Exception:
+            pass
+    except Exception as e:
+        color_print(f'[Error] Failed to set up runs directory: {str(e)}\n', 'red')
+        sys.exit(1)
+
+def os_path_setup():
+    '''Set up base and target directories for VASP input files.'''
+    base_dir = os.getcwd()
+    main_dir = os.path.join(base_dir, 'masgent_projects')
+    os.makedirs(main_dir, exist_ok=True)
+    
+    # Otherwise, create a new runs directory with timestamp
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    runs_dir = os.path.join(main_dir, f'runs_{timestamp}')
+    if not os.path.exists(runs_dir):
+        os.makedirs(runs_dir, exist_ok=True)
+    else:
+        # Rare collision case, wait a second and try again
+        time.sleep(1)
+        timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        runs_dir = os.path.join(main_dir, f'runs_{timestamp}')
+        os.makedirs(runs_dir, exist_ok=True)
+    
+    # Set the environment variable for this session
+    os.environ['MASGENT_SESSION_RUNS_DIR'] = runs_dir
+
+    return base_dir, main_dir, runs_dir
+
 def global_commands():
     return [
         '',
         'AI    ->  Chat with the Masgent AI',
+        'New   ->  Start a new session',
         'Back  ->  Return to previous menu',
         'Main  ->  Return to main menu',
         'Help  ->  Show available functions',
@@ -118,37 +163,6 @@ def ask_for_mp_api_key():
         with open(env_path, 'a') as f:
             f.write(f'MP_API_KEY={key}\n')
         color_print(f'Materials Project API key saved to {env_path} file.\n', 'green')
-
-def os_path_setup():
-    '''Set up base and target directories for VASP input files.'''
-    base_dir = os.getcwd()
-    main_dir = os.path.join(base_dir, 'masgent_projects')
-    os.makedirs(main_dir, exist_ok=True)
-
-    # Check for MASGENT_SESSION_RUNS_DIR environment variable
-    session_runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
-    if session_runs_dir:
-        if not os.path.exists(session_runs_dir):
-            os.makedirs(session_runs_dir, exist_ok=True)
-        runs_dir = session_runs_dir
-        return base_dir, main_dir, runs_dir
-    
-    # Otherwise, create a new runs directory with timestamp
-    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    runs_dir = os.path.join(main_dir, f'runs_{timestamp}')
-    if not os.path.exists(runs_dir):
-        os.makedirs(runs_dir, exist_ok=True)
-    else:
-        # Rare collision case, wait a second and try again
-        time.sleep(1)
-        timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        runs_dir = os.path.join(main_dir, f'runs_{timestamp}')
-        os.makedirs(runs_dir, exist_ok=True)
-    
-    # Set the environment variable for this session
-    os.environ['MASGENT_SESSION_RUNS_DIR'] = runs_dir
-
-    return base_dir, main_dir, runs_dir
 
 def print_banner():
     try:

@@ -4,9 +4,15 @@ import sys
 from bullet import Bullet, colors
 
 from masgent.ai_mode import ai_backend
-from masgent.utils import color_print, print_banner, print_help, os_path_setup
 from masgent.cli_mode.cli_entries import run_command
-from masgent import tools
+from masgent.utils import (
+    color_print, 
+    print_banner, 
+    print_help, 
+    os_path_setup, 
+    set_session_runs_dir,
+    start_new_session,
+    )
 
 def main():
     print_banner()
@@ -16,7 +22,7 @@ def main():
         base_dir, main_dir, runs_dir = os_path_setup()
         color_print(f'[Info] Masgent session runs directory: {runs_dir}\n', 'green')
         try:
-            tools.set_session_runs_dir(runs_dir)
+            set_session_runs_dir(runs_dir)
         except Exception:
             pass
     except Exception as e:
@@ -36,6 +42,7 @@ Please select from the following options:
                 '3. Machine Learning Model Training & Evaluation',
                 '',
                 'AI    ->  Chat with the Masgent AI',
+                'New   ->  Start a new session',
                 'Help  ->  Show available functions',
                 'Exit  ->  Quit the Masgent',
             ]
@@ -44,6 +51,8 @@ Please select from the following options:
             
             if user_input.startswith('AI'):
                 ai_backend.main()
+            if user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Help'):
                 print_help()
             elif user_input.startswith('Exit'):

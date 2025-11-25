@@ -5,7 +5,13 @@ from bullet import Bullet, YesNo, colors
 
 from masgent import tools, schemas
 from masgent.ai_mode import ai_backend
-from masgent.utils import color_print, color_input, print_help, global_commands
+from masgent.utils import (
+    color_print, 
+    color_input, 
+    print_help, 
+    global_commands, 
+    start_new_session
+    )
 
 COMMANDS = {}
 
@@ -47,6 +53,8 @@ def check_poscar():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -116,6 +124,8 @@ def command_1_1_2():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -165,6 +175,8 @@ def command_1_1_3():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -234,6 +246,8 @@ def command_1_1_4():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -453,6 +467,8 @@ def command_1_2_1():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -511,6 +527,8 @@ def command_1_2_3():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):

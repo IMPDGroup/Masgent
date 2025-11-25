@@ -4,8 +4,14 @@ import sys
 from bullet import Bullet, colors
 
 from masgent.ai_mode import ai_backend
-from masgent.utils import color_print, print_banner, print_help, global_commands
 from masgent.cli_mode.cli_run import register, run_command
+from masgent.utils import (
+    color_print, 
+    print_banner, 
+    print_help, 
+    global_commands, 
+    start_new_session
+    )
 
 
 ###############################################
@@ -31,6 +37,7 @@ Please select from the following options:
                 '3. Machine Learning Model Training & Evaluation',
                 '',
                 'AI    ->  Chat with the Masgent AI',
+                'New   ->  Start a new session',
                 'Help  ->  Show available functions',
                 'Exit  ->  Quit the Masgent',
             ]
@@ -39,6 +46,8 @@ Please select from the following options:
             
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Help'):
                 print_help()
             elif user_input.startswith('Exit'):
@@ -71,6 +80,8 @@ def command_1():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -113,6 +124,8 @@ def command_1_1():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -161,6 +174,8 @@ def command_1_2():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -201,6 +216,8 @@ def command_1_2_5():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):
@@ -235,6 +252,8 @@ def command_1_3():
 
             if user_input.startswith('AI'):
                 ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
             elif user_input.startswith('Back'):
                 return
             elif user_input.startswith('Main'):

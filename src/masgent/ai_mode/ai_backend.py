@@ -26,6 +26,8 @@ from masgent.utils import (
     color_print,
     color_input,
     os_path_setup,
+    set_session_runs_dir,
+    start_new_session,
     )
 
 # Track whether OpenAI key has been checked during this process
@@ -60,9 +62,8 @@ Ask Masgent AI for help with any simulation tasks.
     msg_2 = '''
 Try asking:
   • "Generate a POSCAR file for NaCl."
-  • "Prepare VASP input files for a graphene structure."
-  • "Add defects to a silicon crystal POSCAR."
-  • "Generate a supercell from a POSCAR file."
+  • "Prepare full VASP input files for LaCoO3."
+  • "Add vacancy defects to a LiFePO4 crystal."
   • ...
 '''
     color_print(msg_1, 'white')
@@ -156,14 +157,16 @@ async def ai_mode(agent):
     
     try:
         while True:
-            user_input = color_input('\nAsk anything or type "back" to return > ', 'yellow').strip()
+            user_input = color_input('\nAsk anything, or type "back" to return, "new" to start a new session > ', 'green').strip()
 
             if not user_input:
                 continue
             
-            if user_input in {'ai'}:
+            if user_input.lower() in {'ai'}:
                 color_print('[Info] You are already in AI mode. \n', 'green')
-            elif user_input in {'back'}:
+            elif user_input.lower() in {'new'}:
+                start_new_session()
+            elif user_input.lower() in {'back'}:
                 return
             else:
                 try:
@@ -184,7 +187,7 @@ def main():
         base_dir, main_dir, runs_dir = os_path_setup()
         color_print(f'[Info] Masgent AI session runs directory: {runs_dir}\n', 'green')
         try:
-            tools.set_session_runs_dir(runs_dir)
+            set_session_runs_dir(runs_dir)
         except Exception:
             pass
     except Exception as e:

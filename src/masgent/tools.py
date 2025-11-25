@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-import os, warnings, random, datetime
+import os, warnings, random
 from dotenv import load_dotenv
 from ase.io import read, write
 from mp_api.client import MPRester
@@ -30,14 +30,6 @@ warnings.filterwarnings('ignore')
 # Track whether Materials Project key has been checked during this process
 _mp_key_checked = False
 
-# Optional session runs directory
-_SESSION_RUNS_DIR = None
-
-def set_session_runs_dir(path: str):
-    '''Set the session runs directory.'''
-    global _SESSION_RUNS_DIR
-    _SESSION_RUNS_DIR = path
-
 def with_metadata(input: schemas.ToolMetadata):
     '''
     Decorator to add metadata to tool functions.
@@ -64,7 +56,7 @@ def generate_vasp_poscar(input: schemas.GenerateVaspPoscarSchema) -> dict:
     formula_list = input.formula_list
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
         poscar_paths = []
         
@@ -119,7 +111,7 @@ def generate_vasp_poscar(input: schemas.GenerateVaspPoscarSchema) -> dict:
     description='Generate VASP input files (INCAR, KPOINTS, POTCAR) using pymatgen input sets (MPRelaxSet, MPStaticSet, MPNonSCFSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet).',
     requires=['vasp_input_sets'],
     optional=['poscar_path'],
-    defaults={'poscar_path': f'{_SESSION_RUNS_DIR}/POSCAR'},
+    defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
 def generate_vasp_inputs_from_poscar(input: schemas.GenerateVaspInputsFromPoscar) -> dict:
@@ -142,7 +134,7 @@ def generate_vasp_inputs_from_poscar(input: schemas.GenerateVaspInputsFromPoscar
     vis_class = VIS_MAP[vasp_input_sets]
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
         structure = Structure.from_file(poscar_path)
         vis = vis_class(structure)
@@ -199,7 +191,7 @@ def convert_structure_format(input: schemas.ConvertStructureFormatSchema) -> dic
     }
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
         atoms = read(input_path, format=format_map[input_format])
         filename_wo_ext = os.path.splitext(os.path.basename(input_path))[0]
@@ -227,7 +219,7 @@ def convert_structure_format(input: schemas.ConvertStructureFormatSchema) -> dic
     description='Convert POSCAR between direct and cartesian coordinates.',
     requires=['to_cartesian'],
     optional=['poscar_path'],
-    defaults={'poscar_path': f'{_SESSION_RUNS_DIR}/POSCAR'},
+    defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
 def convert_poscar_coordinates(input: schemas.ConvertPoscarCoordinatesSchema) -> dict:
@@ -240,7 +232,7 @@ def convert_poscar_coordinates(input: schemas.ConvertPoscarCoordinatesSchema) ->
     to_cartesian = input.to_cartesian
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
         if poscar_path is None:
             poscar_path = os.path.join(runs_dir, 'POSCAR')
@@ -269,7 +261,7 @@ def convert_poscar_coordinates(input: schemas.ConvertPoscarCoordinatesSchema) ->
     description='Customize VASP KPOINTS from POSCAR with specified accuracy level (Low, Medium, High).',
     requires=['accuracy_level'],
     optional=['poscar_path'],
-    defaults={'poscar_path': f'{_SESSION_RUNS_DIR}/POSCAR'},
+    defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
 def customize_vasp_kpoints_with_accuracy(input: schemas.CustomizeVaspKpointsWithAccuracy) -> dict:
@@ -289,7 +281,7 @@ def customize_vasp_kpoints_with_accuracy(input: schemas.CustomizeVaspKpointsWith
     kppa = DENSITY_MAP[accuracy_level]
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
         
         structure = Structure.from_file(poscar_path)
         kpoints = Kpoints.automatic_density(structure, kppa=kppa)
@@ -314,7 +306,7 @@ def customize_vasp_kpoints_with_accuracy(input: schemas.CustomizeVaspKpointsWith
     description='Generate VASP POSCAR with vacancy defects.',
     requires=['original_element', 'defect_amount'],
     optional=['poscar_path'],
-    defaults={'poscar_path': f'{_SESSION_RUNS_DIR}/POSCAR'},
+    defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
 def generate_vasp_poscar_with_vacancy_defects(input: schemas.GenerateVaspPoscarWithVacancyDefects) -> dict:
@@ -328,7 +320,7 @@ def generate_vasp_poscar_with_vacancy_defects(input: schemas.GenerateVaspPoscarW
     defect_amount = input.defect_amount
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
         
         atoms = read(poscar_path, format='vasp')
 
@@ -363,7 +355,7 @@ def generate_vasp_poscar_with_vacancy_defects(input: schemas.GenerateVaspPoscarW
     description='Generate VASP POSCAR with substitution defects.',
     requires=['original_element', 'defect_element', 'defect_amount'],
     optional=['poscar_path'],
-    defaults={'poscar_path': f'{_SESSION_RUNS_DIR}/POSCAR'},
+    defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
 def generate_vasp_poscar_with_substitution_defects(input: schemas.GenerateVaspPoscarWithSubstitutionDefects) -> dict:
@@ -378,7 +370,7 @@ def generate_vasp_poscar_with_substitution_defects(input: schemas.GenerateVaspPo
     defect_amount = input.defect_amount
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
         
         atoms = read(poscar_path, format='vasp')
 
@@ -413,7 +405,7 @@ def generate_vasp_poscar_with_substitution_defects(input: schemas.GenerateVaspPo
     description='Generate VASP POSCAR with interstitial (Voronoi) defects.',
     requires=['defect_element'],
     optional=['poscar_path'],
-    defaults={'poscar_path': f'{_SESSION_RUNS_DIR}/POSCAR'},
+    defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
 def generate_vasp_poscar_with_interstitial_defects(input: schemas.GenerateVaspPoscarWithInterstitialDefects) -> dict:
@@ -426,7 +418,7 @@ def generate_vasp_poscar_with_interstitial_defects(input: schemas.GenerateVaspPo
     defect_element = input.defect_element
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
         
         atoms = read(poscar_path, format='vasp')
 
@@ -469,7 +461,7 @@ def generate_vasp_poscar_with_interstitial_defects(input: schemas.GenerateVaspPo
     description='Generate supercell from POSCAR based on user-defined 3x3 scaling matrix.',
     requires=['scaling_matrix'],
     optional=['poscar_path'],
-    defaults={'poscar_path': f'{_SESSION_RUNS_DIR}/POSCAR'},
+    defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
 def generate_supercell_from_poscar(input: schemas.GenerateSupercellFromPoscar) -> dict:
@@ -487,7 +479,7 @@ def generate_supercell_from_poscar(input: schemas.GenerateSupercellFromPoscar) -
         ]
 
     try:
-        runs_dir = _SESSION_RUNS_DIR
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
         
         structure = Structure.from_file(poscar_path).copy()
         supercell_structure = structure.make_supercell(scaling_matrix_)

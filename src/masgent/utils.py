@@ -174,7 +174,7 @@ def print_help():
     title = '\n Masgent - Available Commands and Functions '
     color_print(title, "green")
 
-    headers = ['Code', 'Description']
+    headers = ['Index', 'Description']
     rows = [
         ['1', 'Density Functional Theory (DFT) Simulations'],
         
@@ -190,9 +190,9 @@ def print_help():
 
         ['1.2', 'VASP Input File Preparation'],
         ['1.2.1', 'Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)'],
-        # ['1.2.2', 'Generate INCAR templates (relaxation, static, MD, etc.)'],
+        ['1.2.2', 'Generate INCAR templates (relaxation, static, MD, etc.)'],
         ['1.2.3', 'Generate KPOINTS with specified accuracy'],
-        # ['1.2.4', 'Generate HPC job submission script'],
+        ['1.2.4', 'Generate HPC job submission script'],
         # ['1.2.5', 'Generate standard VASP calculation workflows'],
         # ['1.2.5.1', 'Convergence testing (ENCUT, KPOINTS)'],
         # ['1.2.5.2', 'Equation of State (EOS)'],

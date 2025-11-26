@@ -211,7 +211,7 @@ class ConvertPoscarCoordinatesSchema(BaseModel):
     
 class GenerateVaspInputsFromPoscar(BaseModel):
     '''
-    Schema for generating VASP input files (INCAR, KPOINTS, POTCAR) from POSCAR using pymatgen input sets.
+    Schema for generating VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets.
     '''
     poscar_path: Optional[str] = Field(
         None,
@@ -518,5 +518,55 @@ class GenerateSupercellFromPoscar(BaseModel):
             
         except Exception:
             raise ValueError('Scaling matrix must be a 3x3 matrix with integer entries.')
+
+        return self
+    
+class GenerateVaspInputsHpcSlurmScript(BaseModel):
+    '''
+    Schema for generating HPC Slurm job submission script for VASP calculations.
+    '''
+    partition: Optional[str] = Field(
+        'normal',
+        description='Slurm partition/queue name. Defaults to "normal" if not provided.'
+    )
+
+    nodes: Optional[int] = Field(
+        1,
+        description='Number of nodes to request. Defaults to 1 if not provided.'
+    )
+
+    ntasks: Optional[int] = Field(
+        8,
+        description='Number of tasks (cores) to request. Defaults to 8 if not provided.'
+    )
+
+    walltime: Optional[str] = Field(
+        '00:10:00',
+        description='Walltime limit in format HH:MM:SS. Defaults to "00:10:00" if not provided.'
+    )
+
+    jobname: Optional[str] = Field(
+        'masgent_job',
+        description='Name of the job. Defaults to "masgent_job" if not provided.'
+    )
+
+    command: Optional[str] = Field(
+        'srun vasp_std > vasp.out',
+        description='Command to execute the job. Defaults to "srun vasp_std > vasp.out" if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # validate nodes
+        if self.nodes < 1:
+            raise ValueError('Number of nodes must be at least 1.')
+        
+        # validate ntasks
+        if self.ntasks < 1:
+            raise ValueError('Number of tasks must be at least 1.')
+        
+        # validate walltime format HH:MM:SS
+        if not re.match(r'^\d{1,2}:\d{2}:\d{2}$', self.walltime):
+            raise ValueError('Walltime must be in format HH:MM:SS.')
 
         return self

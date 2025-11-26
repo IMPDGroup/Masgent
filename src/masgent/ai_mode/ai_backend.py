@@ -209,6 +209,7 @@ def main():
             tools.generate_vasp_poscar_with_vacancy_defects,
             tools.generate_vasp_poscar_with_substitution_defects,
             tools.generate_vasp_poscar_with_interstitial_defects,
+            tools.generate_vasp_inputs_hpc_slurm_script,
         ],
         history_processors=[keep_recent_messages],
         )

@@ -642,3 +642,79 @@ def command_1_2_3():
     input = schemas.CustomizeVaspKpointsWithAccuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
     result = tools.customize_vasp_kpoints_with_accuracy(input=input)
     color_print(result['message'], 'green')
+
+@register('1.2.4', 'Generate HPC Slurm job submission script for VASP calculations.')
+def command_1_2_4():
+    try:
+        partition = color_input('\nEnter the HPC partition/queue name (default: normal): ', 'yellow').strip() or 'normal'
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+
+    try:
+        while True:
+            nodes = color_input('\nEnter the number of nodes (default: 1): ', 'yellow').strip()
+            try:
+                if not nodes:
+                    nodes = 1
+                else:
+                    nodes = int(nodes)
+                schemas.GenerateHPCSlurmScript(value=nodes, field_name='Number of nodes')
+                break
+            except ValueError:
+                color_print(f"\n[Error] Invalid number of nodes: {nodes}. Please enter a positive integer.\n", 'red')
+                continue
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    try:
+        while True:
+            ntasks = color_input('\nEnter the number of tasks per node (default: 8): ', 'yellow').strip()
+            try:
+                if not ntasks:
+                    ntasks = 8
+                else:
+                    ntasks = int(ntasks)
+                schemas.GenerateHPCSlurmScript(value=ntasks, field_name='Number of tasks per node')
+                break
+            except ValueError:
+                color_print(f"\n[Error] Invalid number of tasks: {ntasks}. Please enter a positive integer.\n", 'red')
+                continue
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    try:
+        while True:
+            walltime = color_input('\nEnter the job walltime in format HH:MM:SS (default: 01:00:00): ', 'yellow').strip()
+            try:
+                if not walltime:
+                    walltime = '01:00:00'
+                schemas.GenerateHPCSlurmScript(walltime=walltime)
+                break
+            except ValueError:
+                color_print(f"\n[Error] Invalid walltime format: {walltime}. Please use 'HH:MM:SS' format.\n", 'red')
+                continue
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+
+    try:
+        job_name = color_input('\nEnter the job name (default: masgent_job): ', 'yellow').strip()
+        if not job_name:
+            job_name = 'masgent_job'
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    input = schemas.GenerateHPCSlurmScript(
+        partition=partition,
+        nodes=nodes,
+        ntasks=ntasks,
+        walltime=walltime,
+        job_name=job_name,
+        command='srun vasp_std > vasp.out'
+    )
+    result = tools.generate_HPC_slurm_script(input=input)
+    color_print(result['message'], 'green')

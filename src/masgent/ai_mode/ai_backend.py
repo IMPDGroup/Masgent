@@ -214,6 +214,7 @@ def main():
             tools.generate_vasp_poscar_for_surface_slab,
             tools.generate_vasp_workflow_of_convergence_tests,
             tools.generate_vasp_workflow_of_eos,
+            tools.generate_sqs_from_poscar,
         ],
         history_processors=[keep_recent_messages],
         )

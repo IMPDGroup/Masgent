@@ -666,3 +666,78 @@ class GenerateVaspWorkflowOfEos(BaseModel):
             raise ValueError('All scale factors must be positive floats.')
 
         return self
+    
+class GenerateSqsFromPoscar(BaseModel):
+    '''
+    Schema for generating Special Quasirandom Structures (SQS) from a given POSCAR file.
+    '''
+    poscar_path: Optional[str] = Field(
+        os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
+        description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
+    )
+
+    target_configurations: Dict[str, Dict[str, float]] = Field(
+        ...,
+        description='Dictionary specifying target configurations for each sublattice. E.g., {"La": {"La": 0.5, "Y": 0.5}, "Co": {"Al": 0.75, "Co": 0.25}}'
+    )
+
+    cutoffs: Optional[List[float]] = Field(
+        [8.0, 4.0],
+        description='List of cutoff distances (in Angstroms) for cluster expansion. Defaults to [8.0, 4.0] if not provided.'
+    )
+
+    max_supercell_size: Optional[int] = Field(
+        8,
+        description='Maximum size of the supercell (number of primitive cells). Defaults to 8 if not provided.'
+    )
+
+    mc_steps: Optional[int] = Field(
+        10000,
+        description='Number of Monte Carlo steps for SQS generation. Defaults to 10000 if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure POSCAR exists
+        if not os.path.isfile(self.poscar_path):
+            raise ValueError(f'POSCAR file not found: {self.poscar_path}')
+        
+        # ensure the poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid POSCAR file: {self.poscar_path}')
+        
+        # validate cutoffs
+        if not all(isinstance(cutoff, (float, int)) and cutoff > 0 for cutoff in self.cutoffs):
+            raise ValueError('All cutoff distances must be positive numbers.')
+        
+        # validate target_configurations
+        for sublattice, conc_dict in self.target_configurations.items():
+            # validate sublattice element is valid
+            try:
+                Element(sublattice)
+            except:
+                raise ValueError(f'Invalid sublattice element symbol: {sublattice}')
+            # validate sublattice element exists in the POSCAR structure
+            structure = Structure.from_file(self.poscar_path)
+            if sublattice not in {str(site.specie) for site in structure.sites}:
+                raise ValueError(f'Sublattice element {sublattice} does not exist in POSCAR structure.')
+            # validate concentration dictionary
+            if not isinstance(conc_dict, dict) or not conc_dict:
+                raise ValueError(f'Target configurations for sublattice {sublattice} must be a non-empty dictionary.')
+            total_conc = sum(conc_dict.values())
+            if abs(total_conc - 1.0) > 1e-5:
+                raise ValueError(f'Target concentrations for sublattice {sublattice} must sum to 1.0. Current sum: {total_conc}')
+        
+        # validate max_supercell_size
+        if self.max_supercell_size < 1:
+            raise ValueError('Maximum supercell size must be at least 1.')
+        
+        # validate mc_steps
+        if self.mc_steps < 1000:
+            raise ValueError('Number of Monte Carlo steps must be at least 1000 for meaningful SQS generation.')
+
+        return self
+
+

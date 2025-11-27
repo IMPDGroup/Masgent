@@ -2,6 +2,8 @@
 
 import sys, os
 from bullet import Bullet, colors
+from yaspin import yaspin
+from yaspin.spinners import Spinners
 
 from masgent import tools, schemas
 from masgent.ai_mode import ai_backend
@@ -417,7 +419,9 @@ def command_interstitial():
         return
 
     input = schemas.GenerateVaspPoscarWithInterstitialDefects(poscar_path=poscar_path, defect_element=defect_element)
-    result = tools.generate_vasp_poscar_with_interstitial_defects(input=input)
+    print('')
+    with yaspin(Spinners.dots, text='Generating SQS... See details in the log file.', color='cyan') as sp:
+        result = tools.generate_vasp_poscar_with_interstitial_defects(input=input)
     color_print(result['message'], 'green')
 
 @register('1.1.5', 'Generate supercell from POSCAR with specified scaling matrix.')
@@ -448,6 +452,105 @@ def command_1_1_5():
     
     input = schemas.GenerateSupercellFromPoscar(poscar_path=poscar_path, scaling_matrix=sm)
     result = tools.generate_supercell_from_poscar(input=input)
+    color_print(result['message'], 'green')
+
+@register('1.1.6', 'Generate special quasi-random structure (SQS) from POSCAR.')
+def command_1_1_6():
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    try:
+        while True:
+            target_configurations_str = color_input('\nEnter target configurations (e.g., "La:La=0.5,Y=0.5; Co:Al=0.75,Co=0.25"): ', 'yellow').strip()
+            
+            if not target_configurations_str:
+                continue
+
+            try:
+                # parse target configurations to {'La': {'La': 0.5, 'Y': 0.5}, 'Co': {'Al': 0.75, 'Co': 0.25}}
+                target_configurations = {}
+                for sublattice_str in target_configurations_str.split(';'):
+                    sublattice_str = sublattice_str.strip()
+                    if not sublattice_str:
+                        continue
+                    element, conc_str = sublattice_str.split(':')
+                    element = element.strip()
+                    conc_pairs = conc_str.split(',')
+                    conc_dict = {}
+                    for pair in conc_pairs:
+                        species, conc = pair.split('=')
+                        conc_dict[species.strip()] = float(conc.strip())
+                    target_configurations[element] = conc_dict
+                schemas.GenerateSqsFromPoscar(poscar_path=poscar_path, target_configurations=target_configurations)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid target configurations: {target_configurations_str}, please double check and try again.\n', 'red')
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    try:
+        while True:
+            cutoffs_str = color_input('\nEnter cluster cutoffs in Å (e.g., "8.0 4.0 4.0" for pairs, triplets, and quadruplets): ', 'yellow').strip()
+
+            if not cutoffs_str:
+                continue
+
+            try:
+                cutoffs = [float(x) for x in cutoffs_str.split()]
+                schemas.GenerateSqsFromPoscar(poscar_path=poscar_path, target_configurations=target_configurations, cutoffs=cutoffs)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid cutoffs: {cutoffs_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    try:
+        while True:
+            max_supercell_size_str = color_input('\nEnter maximum supercell size (e.g., "8"): ', 'yellow').strip()
+
+            if not max_supercell_size_str:
+                continue
+
+            try:
+                max_supercell_size = int(max_supercell_size_str)
+                schemas.GenerateSqsFromPoscar(poscar_path=poscar_path, target_configurations=target_configurations, cutoffs=cutoffs, max_supercell_size=max_supercell_size)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid maximum supercell size: {max_supercell_size_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    try:
+        while True:
+            mc_steps_str = color_input('\nEnter number of Monte Carlo steps (e.g., ">=1000"): ', 'yellow').strip()
+
+            if not mc_steps_str:
+                continue
+
+            try:
+                mc_steps = int(mc_steps_str)
+                schemas.GenerateSqsFromPoscar(poscar_path=poscar_path, target_configurations=target_configurations, cutoffs=cutoffs, max_supercell_size=max_supercell_size, mc_steps=mc_steps)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid number of Monte Carlo steps: {mc_steps_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        return
+    
+    input = schemas.GenerateSqsFromPoscar(poscar_path=poscar_path, target_configurations=target_configurations, cutoffs=cutoffs, max_supercell_size=max_supercell_size, mc_steps=mc_steps)
+    print('')
+    with yaspin(Spinners.dots, text='Generating SQS... See details in the log file.', color='cyan') as sp:
+        result = tools.generate_sqs_from_poscar(input=input)
     color_print(result['message'], 'green')
 
 @register('1.1.7', 'Generate surface slab from POSCAR with specified Miller indices, vacuum thickness, and slab layers.')

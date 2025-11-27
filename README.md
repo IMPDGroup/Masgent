@@ -41,7 +41,7 @@ masgent
     - 1.1.3 Convert structure file formats (CIF, POSCAR, XYZ)
     - 1.1.4 Generate structures with defects (Vacancies, Substitutions, Interstitials with Voronoi)
     - 1.1.5 Generate supercells
-    - 1.1.6 (Planned) Generate special quasirandom structures (SQS)
+    - 1.1.6 Generate special quasirandom structures (SQS)
     - 1.1.7 Generate surface slabs
     - 1.1.8 (Planned) Generate interface structures
   

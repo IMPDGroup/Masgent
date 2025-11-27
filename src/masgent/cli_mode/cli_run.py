@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, os
-from bullet import Bullet, YesNo, colors
+from bullet import Bullet, colors
 
 from masgent import tools, schemas
 from masgent.ai_mode import ai_backend

@@ -2,7 +2,7 @@
 
 import os, re
 
-from ase.io import read, write
+from ase.io import read
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 

@@ -100,7 +100,7 @@ def command_1_1_1():
                 continue
 
             try:
-                schemas.GenerateVaspPoscarSchema(formula_list=[formula])
+                schemas.GenerateVaspPoscarSchema(formula=formula)
                 break
             except Exception:
                 color_print(f'[Error] Invalid formula: {formula}, please double check and try again.\n', 'red')
@@ -109,7 +109,7 @@ def command_1_1_1():
         color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
         return
 
-    input = schemas.GenerateVaspPoscarSchema(formula_list=[formula])
+    input = schemas.GenerateVaspPoscarSchema(formula=formula)
     result = tools.generate_vasp_poscar(input=input)
     color_print(result['message'], 'green')
 

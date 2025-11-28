@@ -105,33 +105,32 @@ class GenerateVaspPoscarSchema(BaseModel):
     '''
     Schema for generating VASP POSCAR file from user inputs or from Materials Project database.
     '''
-    formula_list: List[str] = Field(
+    formula: str = Field(
         ...,
-        description='List of chemical formulas to generate POSCAR files for, e.g., ["Cu", "NaCl", "MgO"]'
+        description='Chemical formula to generate POSCAR file for, e.g., "Cu", "NaCl", "MgO"'
     )
 
     @model_validator(mode="after")
     def validator(self):
-        for formula in self.formula_list:
-            # ensure formula is valid
-            matches = re.findall(r'([A-Z][a-z]?)(\d*)', formula)
-            
-            # validate characters
-            reconstructed = ''.join(elem + num for elem, num in matches)
-            if reconstructed != formula:
-                raise ValueError(f"Invalid characters in formula: {formula}")
-            
-            # validate elements
-            valid = True
-            for elem, num in matches:
-                try:
-                    Element(elem)  # will fail for invalid elements
-                except:
-                    valid = False
-                    break
+        # ensure formula is valid
+        matches = re.findall(r'([A-Z][a-z]?)(\d*)', self.formula)
+        
+        # validate characters
+        reconstructed = ''.join(elem + num for elem, num in matches)
+        if reconstructed != self.formula:
+            raise ValueError(f"Invalid characters in formula: {self.formula}")
+        
+        # validate elements
+        valid = True
+        for elem, num in matches:
+            try:
+                Element(elem)  # will fail for invalid elements
+            except:
+                valid = False
+                break
 
-            if not valid:
-                raise ValueError(f'Invalid chemical formula: {self.formula}')
+        if not valid:
+            raise ValueError(f'Invalid chemical formula: {self.formula}')
 
         return self
     

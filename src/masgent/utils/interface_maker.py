@@ -183,17 +183,17 @@ def gen_intf(i, profile):
 
         # Store the lattice matching data
         with open(f'{OUTPUT_DIR}/interface_maker.log', 'a') as f:
-            f.write(f' Interface {i+1}-{j+1} '.center(60, '-') + '\n')
+            f.write(f' Interface {i+1}-{j+1} '.center(70, '-') + '\n')
 
-            f.write('Total atoms:'.ljust(40) + f'{len(interface)}\n')
-            f.write('Lower / Upper hkl:'.ljust(40) + f'({hkl_0}) / ({hkl_1})\n')
-            f.write('Lower / Upper area (A^2):'.ljust(40) + f'{area_0:.2f} / {area_1:.2f}\n')
+            f.write('Total atoms:'.ljust(50) + f'{len(interface)}\n')
+            f.write('Lower / Upper hkl:'.ljust(50) + f'({hkl_0}) / ({hkl_1})\n')
+            f.write('Lower / Upper area (A^2):'.ljust(50) + f'{area_0:.2f} / {area_1:.2f}\n')
             f.write('\n')
 
-            f.write('U misfit (%):'.ljust(40) + f'{profile[2] * 100:.6f}\n')
-            f.write('V misfit (%):'.ljust(40) + f'{profile[3] * 100:.6f}\n')
-            f.write('Angle misfit (°):'.ljust(40) + f'{profile[4]:.6f}\n')
-            f.write('Area misfit (%):'.ljust(40) + f'{np.abs(area_0 - area_1) / area_0 * 100:.6f}\n')
+            f.write('U misfit (%):'.ljust(50) + f'{profile[2] * 100:.6f}\n')
+            f.write('V misfit (%):'.ljust(50) + f'{profile[3] * 100:.6f}\n')
+            f.write('Angle misfit (°):'.ljust(50) + f'{profile[4]:.6f}\n')
+            f.write('Area misfit (%):'.ljust(50) + f'{np.abs(area_0 - area_1) / area_0 * 100:.6f}\n')
             f.write('\n')
 
             f.write('Transformed matrix for lower slab:\n')
@@ -204,7 +204,7 @@ def gen_intf(i, profile):
             f.write('Transformed matrix for upper slab:\n')
             f.write(f'{T_1[0][0]:.6f}  {T_1[0][1]:.6f}\n')
             f.write(f'{T_1[1][0]:.6f}  {T_1[1][1]:.6f}\n')
-            f.write('\n\n')
+            f.write('\n')
         
         # Store the lattice matching data in a csv file
         with open(f'{OUTPUT_DIR}/interface_maker.csv', 'a') as f:
@@ -518,28 +518,28 @@ def run_interface_maker(lower_conv, upper_conv, lower_hkl, upper_hkl, min_area, 
         shutil.rmtree(f'{OUTPUT_DIR}/interfaces')
         os.makedirs(f'{OUTPUT_DIR}/interfaces')
 
-    with open(f'{OUTPUT_DIR}/interface_maker.log', 'a') as f:
-        f.write('-'.center(60, '-') + '\n\n')
-        f.write('Masgent - Interface Maker'.center(60) + '\n')
-        f.write('-------------------------'.center(60) + '\n')
-        f.write('Copyright (c) 2025 Guangchen Liu'.center(60) + '\n\n')
-        f.write('-'.center(60, '-') + '\n\n')
-        f.write(f'Aassigned Miller indices:'.center(60) + '\n')
-        f.write(f'Lower slab: {LOWER_HKL[0]}'.center(60) + '\n')
-        f.write(f'Upper slab: {UPPER_HKL[0]}'.center(60) + '\n')
+    with open(f'{OUTPUT_DIR}/interface_maker.log', 'w') as f:
+        f.write('-'.center(70, '-') + '\n\n')
+        f.write('Masgent - Interface Maker'.center(70) + '\n')
+        f.write('-------------------------'.center(70) + '\n')
+        f.write('Copyright (c) 2025 Guangchen Liu'.center(70) + '\n\n')
+        f.write('Cite Us: https://doi.org/10.1016/j.mtphys.2025.101940'.center(70) + '\n\n')
+        f.write(f'Aassigned Miller indices:'.center(70) + '\n')
+        f.write(f'Lower slab: {LOWER_HKL[0]}'.center(70) + '\n')
+        f.write(f'Upper slab: {UPPER_HKL[0]}'.center(70) + '\n')
         f.write('\n')
         if SHAPE_FILTER:
-            f.write('Warning: Shape filter is ON! '.center(60) + '\n')
-            f.write('Only the most square-like interface will be kept!'.center(60) + '\n')
+            f.write('Warning: Shape filter is ON! '.center(70) + '\n')
+            f.write('Only the most square-like interface will be kept!'.center(70) + '\n')
         else:
-            f.write('Warning: Shape filter is OFF! '.center(60) + '\n')
-            f.write('All matched interfaces will be kept!'.center(60) + '\n')
+            f.write('Warning: Shape filter is OFF! '.center(70) + '\n')
+            f.write('All matched interfaces will be kept!'.center(70) + '\n')
         f.write('\n')
-        f.write('-'.center(60, '-') + '\n\n')
+        f.write('-'.center(70, '-') + '\n\n')
         f.write(f'Search results for matched interfaces with area within {MAX_AREA} A^2: \n\n')
         f.write(f'{"Lower hkl":<20}{"Upper hkl":<20}{"Area (A^2)":<20}\n')
     
-    with open(f'{OUTPUT_DIR}/interface_maker.csv', 'a') as f:
+    with open(f'{OUTPUT_DIR}/interface_maker.csv', 'w') as f:
         f.write('Interface ID,Surface ID,Total atoms,Lower hkl,Upper hkl,Lower area,Upper area,U misfit (%),V misfit (%),Angle misfit (°),Area misfit (%),T_0_1,T_0_2,T_0_3,T_0_4,T_1_1,T_1_2,T_1_3,T_1_4\n')
 
     # Get the product of the Miller indices
@@ -574,7 +574,7 @@ def run_interface_maker(lower_conv, upper_conv, lower_hkl, upper_hkl, min_area, 
                     break
 
     with open(f'{OUTPUT_DIR}/interface_maker.log', 'a') as f:
-        f.write(f'\nTotal number of interfaces found: {len(data_matched_all)}'.center(60) + '\n\n')
+        f.write(f'\nTotal number of interfaces found: {len(data_matched_all)}'.center(70) + '\n\n')
         # print(f'\nTotal number of interfaces found: {len(data_matched_all)}')
     
     # Write the matched interfaces

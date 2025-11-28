@@ -25,6 +25,7 @@ from pymatgen.io.vasp.sets import (
     )
 
 from masgent import schemas
+from masgent.utils.interface_maker import run_interface_maker
 from masgent.utils.utils import (
     write_comments,
     color_print,
@@ -854,7 +855,79 @@ def generate_surface_slab_from_poscar(input: schemas.GenerateSurfaceSlabFromPosc
             'status': 'error',
             'message': f'Surface slab POSCAR generation failed: {str(e)}'
         }
+
+@with_metadata(schemas.ToolMetadata(
+    name='Generate interface from two POSCARs',
+    description='Generate VASP POSCAR for interface from two given POSCAR files based on specified parameters: lower and upper Miller indices (hkl) of the slabs, number of lower and upper slab layers, vacuum thickness of the slabs, minimum and maximum interface area, interface gap, lattice vector (uv) tolerance in percentage, angle tolerance in degrees, and shape filter option to keep only the most square-like interfaces',
+    requires=['lower_poscar_path', 'upper_poscar_path', 'lower_hkl', 'upper_hkl'],
+    optional=['lower_slab_layers', 'upper_slab_layers', 'slab_vacuum', 'min_area', 'max_area', 'interface_gap', 'uv_tolerance', 'angle_tolerance', 'shape_filter'],
+    defaults={
+        'lower_slab_layers': 4,
+        'upper_slab_layers': 4,
+        'slab_vacuum': 15.0,
+        'min_area': 50.0,
+        'max_area': 500.0,
+        'interface_gap': 2.0,
+        'uv_tolerance': 5.0,
+        'angle_tolerance': 5.0,
+        'shape_filter': False,
+        },
+    prereqs=[],
+))
+def generate_interface_from_poscars(input: schemas.GenerateInterfaceFromPoscars) -> dict:
+    '''
+    Generate VASP POSCAR for interface from two given POSCAR files based on specified parameters
+    '''
     
+    lower_poscar_path = input.lower_poscar_path
+    upper_poscar_path = input.upper_poscar_path
+    lower_hkl = input.lower_hkl
+    upper_hkl = input.upper_hkl
+    lower_slab_layers = input.lower_slab_layers
+    upper_slab_layers = input.upper_slab_layers
+    slab_vacuum = input.slab_vacuum
+    min_area = input.min_area
+    max_area = input.max_area
+    interface_gap = input.interface_gap
+    uv_tolerance = input.uv_tolerance
+    angle_tolerance = input.angle_tolerance
+    shape_filter = input.shape_filter
+
+    try:
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
+        
+        interfaces_dir = os.path.join(runs_dir, 'interface_maker')
+        os.makedirs(interfaces_dir, exist_ok=True)
+
+        run_interface_maker(
+            lower_conv=lower_poscar_path,
+            upper_conv=upper_poscar_path,
+            lower_hkl=lower_hkl,
+            upper_hkl=upper_hkl,
+            lower_slab_layers=lower_slab_layers,
+            upper_slab_layers=upper_slab_layers,
+            slab_vacuum=slab_vacuum,
+            min_area=min_area,
+            max_area=max_area,
+            interface_gap=interface_gap,
+            uv_tol=uv_tolerance,
+            angle_tol=angle_tolerance,
+            shape_filter=shape_filter,
+            output_dir=interfaces_dir,
+        )
+
+        return {
+            'status': 'success',
+            'message': f'Generated interface POSCAR(s) in {interfaces_dir}.',
+            'interface_dir': interfaces_dir,
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Interface POSCAR generation failed: {str(e)}'
+        }
+
 @with_metadata(schemas.ToolMetadata(
     name='Generate VASP input files and submit bash script for workflow of convergence tests',
     description='Generate VASP workflow of convergence tests for k-points and energy cutoff based on given POSCAR',

@@ -659,6 +659,137 @@ class GenerateSurfaceSlabFromPoscar(BaseModel):
 
         return self
     
+class GenerateInterfaceFromPoscars(BaseModel):
+    '''
+    Schema for generating interface structure from two given POSCAR files.
+    '''
+    
+    lower_poscar_path: str = Field(
+        ...,
+        description='Path to the lower POSCAR file. Must exist.'
+    )
+
+    upper_poscar_path: str = Field(
+        ...,
+        description='Path to the upper POSCAR file. Must exist.'
+    )
+
+    lower_hkl: List[int] = Field(
+        ...,
+        description='Miller indices [h, k, l] for the lower structure surface.'
+    )
+
+    upper_hkl: List[int] = Field(
+        ...,
+        description='Miller indices [h, k, l] for the upper structure surface.'
+    )
+
+    lower_slab_layers: Optional[int] = Field(
+        4,
+        description='Number of atomic layers in the lower slab. Defaults to 4 if not provided.'
+    )
+
+    upper_slab_layers: Optional[int] = Field(
+        4,
+        description='Number of atomic layers in the upper slab. Defaults to 4 if not provided.'
+    )
+
+    slab_vacuum: Optional[float] = Field(
+        15.0,
+        description='Vacuum thickness in Angstroms. Defaults to 15.0 Å if not provided.'
+    )
+
+    min_area: Optional[float] = Field(
+        50.0,
+        description='Minimum interface area in square Angstroms. Defaults to 50.0 Å² if not provided.'
+    )
+
+    max_area: Optional[float] = Field(
+        500.0,
+        description='Maximum interface area in square Angstroms. Defaults to 500.0 Å² if not provided.'
+    )
+
+    interface_gap: Optional[float] = Field(
+        2.0,
+        description='Gap distance between the two slabs in Angstroms. Defaults to 2.0 Å if not provided.'
+    )
+
+    uv_tolerance: Optional[float] = Field(
+        5.0,
+        description='Tolerance for matching in-plane lattice vectors in percentage. Defaults to 5.0% if not provided.'
+    )
+
+    angle_tolerance: Optional[float] = Field(
+        5.0,
+        description='Tolerance for angle matching between in-plane lattice vectors in degrees. Defaults to 5.0° if not provided.'
+    )
+
+    shape_filter: Optional[bool] = Field(
+        False,
+        description='If True, apply shape filtering to keep only the most square-like interfaces. If False, keep all matching interfaces. Defaults to False if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure lower POSCAR exists
+        if not os.path.isfile(self.lower_poscar_path):
+            raise ValueError(f'Lower POSCAR file not found: {self.lower_poscar_path}')
+        
+        # ensure the lower poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.lower_poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid lower POSCAR file: {self.lower_poscar_path}')
+        
+        # ensure upper POSCAR exists
+        if not os.path.isfile(self.upper_poscar_path):
+            raise ValueError(f'Upper POSCAR file not found: {self.upper_poscar_path}')
+        
+        # ensure the upper poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.upper_poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid upper POSCAR file: {self.upper_poscar_path}')
+        
+        # validate lower_hkl
+        if len(self.lower_hkl) != 3 or not all(isinstance(i, int) for i in self.lower_hkl):
+            raise ValueError('Lower Miller indices must be a list of three integers [h, k, l].')
+        
+        # validate upper_hkl
+        if len(self.upper_hkl) != 3 or not all(isinstance(i, int) for i in self.upper_hkl):
+            raise ValueError('Upper Miller indices must be a list of three integers [h, k, l].')
+
+        # validate lower_slab_layers
+        if self.lower_slab_layers < 1:
+            raise ValueError('Number of lower slab layers must be integer at least 1.')
+        
+        # validate upper_slab_layers
+        if self.upper_slab_layers < 1:
+            raise ValueError('Number of upper slab layers must be integer at least 1.')
+        
+        # validate slab_vacuum
+        if self.slab_vacuum <= 0:
+            raise ValueError('Slab vacuum thickness must be a positive number.')
+        
+        # validate min_area and max_area
+        if self.min_area <= 0 or self.max_area <= 0:
+            raise ValueError('Minimum and maximum interface area must be positive numbers.')
+        if self.min_area >= self.max_area:
+            raise ValueError('Minimum interface area must be less than maximum interface area.')
+        
+        # validate interface_gap
+        if self.interface_gap <= 0:
+            raise ValueError('Interface gap distance must be a positive number.')
+        
+        # validate uv_tolerance
+        if self.uv_tolerance < 0:
+            raise ValueError('UV tolerance must be a non-negative number.')
+        
+        # validate angle_tolerance
+        if self.angle_tolerance < 0:
+            raise ValueError('Angle tolerance must be a non-negative number.')
+        
+    
 class GenerateVaspWorkflowOfConvergenceTests(BaseModel):
     '''
     Schema for generating VASP input files and submit bash script for workflow of convergence tests for k-points and energy cutoff based on given POSCAR

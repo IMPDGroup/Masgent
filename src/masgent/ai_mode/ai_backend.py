@@ -218,6 +218,7 @@ def main():
             tools.generate_supercell_from_poscar,
             tools.generate_sqs_from_poscar,
             tools.generate_surface_slab_from_poscar,
+            tools.generate_interface_from_poscars,
             tools.generate_vasp_workflow_of_convergence_tests,
             tools.generate_vasp_workflow_of_eos,
             tools.generate_vasp_workflow_of_elastic_constants,

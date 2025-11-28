@@ -115,6 +115,7 @@ def command_1_1_1():
     input = schemas.GenerateVaspPoscarSchema(formula=formula)
     result = tools.generate_vasp_poscar(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.1.2', 'Convert POSCAR coordinates (Direct <-> Cartesian).')
 def command_1_1_2():
@@ -164,6 +165,7 @@ def command_1_1_2():
     input = schemas.ConvertPoscarCoordinatesSchema(poscar_path=poscar_path, to_cartesian=to_cartesian)
     result = tools.convert_poscar_coordinates(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.1.3', 'Convert structure file formats (CIF, POSCAR, XYZ).')
 def command_1_1_3():
@@ -240,6 +242,7 @@ def command_1_1_3():
     input = schemas.ConvertStructureFormatSchema(input_path=input_path, input_format=input_format, output_format=output_format)
     result = tools.convert_structure_format(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.1.4', 'Generate structure with defects (Vacancy, Interstitial, Substitution).')
 def command_1_1_4():
@@ -337,6 +340,7 @@ def command_vacancy():
     input = schemas.GenerateVaspPoscarWithVacancyDefects(poscar_path=poscar_path, original_element=original_element, defect_amount=defect_amount)
     result = tools.generate_vasp_poscar_with_vacancy_defects(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('substitution', 'Generate structure with substitution defects.')
 def command_substitution():
@@ -408,6 +412,7 @@ def command_substitution():
     input = schemas.GenerateVaspPoscarWithSubstitutionDefects(poscar_path=poscar_path, original_element=original_element, defect_element=defect_element, defect_amount=defect_amount)
     result = tools.generate_vasp_poscar_with_substitution_defects(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('interstitial', 'Generate structure with interstitial (Voronoi) defects.')
 def command_interstitial():
@@ -440,6 +445,7 @@ def command_interstitial():
     with yaspin(Spinners.dots, text='Generating SQS... See details in the log file.', color='cyan') as sp:
         result = tools.generate_vasp_poscar_with_interstitial_defects(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.1.5', 'Generate supercell from POSCAR with specified scaling matrix.')
 def command_1_1_5():
@@ -472,6 +478,7 @@ def command_1_1_5():
     input = schemas.GenerateSupercellFromPoscar(poscar_path=poscar_path, scaling_matrix=sm)
     result = tools.generate_supercell_from_poscar(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.1.6', 'Generate special quasi-random structure (SQS) from POSCAR.')
 def command_1_1_6():
@@ -576,6 +583,7 @@ def command_1_1_6():
     with yaspin(Spinners.dots, text='Generating SQS... See details in the log file.', color='cyan') as sp:
         result = tools.generate_sqs_from_poscar(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.1.7', 'Generate surface slab from POSCAR with specified Miller indices, vacuum thickness, and slab layers.')
 def command_1_1_7():
@@ -646,6 +654,191 @@ def command_1_1_7():
     input = schemas.GenerateSurfaceSlabFromPoscar(poscar_path=poscar_path, miller_indices=miller_indices, vacuum_thickness=vacuum_thickness, slab_layers=slab_layers)
     result = tools.generate_surface_slab_from_poscar(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
+
+@register('1.1.8', 'Generate interface structure from two POSCAR files with specified parameters.')
+def command_1_1_8():
+    try:
+        while True:
+            lower_poscar_path = color_input('\nSelect the lower POSCAR file: ', 'yellow').strip()
+
+            if not lower_poscar_path:
+                continue
+
+            try:
+                schemas.CheckPoscar(poscar_path=lower_poscar_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid POSCAR: {lower_poscar_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            upper_poscar_path = color_input('\nSelect the upper POSCAR file: ', 'yellow').strip()
+
+            if not upper_poscar_path:
+                continue
+
+            try:
+                schemas.CheckPoscar(poscar_path=upper_poscar_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid POSCAR: {upper_poscar_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            hkl_str = color_input('\nEnter the Miller indices for the lower and upper surfaces (e.g., "1 0 0; 1 0 0"): ', 'yellow').strip()
+
+            if not hkl_str:
+                continue
+
+            try:
+                lower_hkl = [int(x) for x in hkl_str.split(';')[0].strip().split()]
+                upper_hkl = [int(x) for x in hkl_str.split(';')[1].strip().split()]
+                schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid Miller indices: {hkl_str}, please double check and try again.\n', 'red')
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            slab_layers_str = color_input('\nEnter the number of slab layers for the lower and upper slabs (e.g., "4 4"): ', 'yellow').strip()
+
+            if not slab_layers_str:
+                continue
+
+            try:
+                lower_slab_layers = int(slab_layers_str.split()[0].strip())
+                upper_slab_layers = int(slab_layers_str.split()[1].strip())
+                schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl, lower_slab_layers=lower_slab_layers, upper_slab_layers=upper_slab_layers)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid slab layers: {slab_layers_str}, please double check and try again.\n', 'red')
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            slab_vacuum_str = color_input('\nEnter the vacuum thickness in Å (e.g., "15.0"): ', 'yellow').strip()
+
+            if not slab_vacuum_str:
+                continue
+
+            try:
+                slab_vacuum = float(slab_vacuum_str)
+                schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl, lower_slab_layers=lower_slab_layers, upper_slab_layers=upper_slab_layers, slab_vacuum=slab_vacuum)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid vacuum thickness: {slab_vacuum_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            area_str = color_input('\nEnter the minimum and maximum interface area to search in Å² (e.g., "50.0 500.0"): ', 'yellow').strip()
+
+            if not area_str:
+                continue
+
+            try:
+                min_area = float(area_str.split()[0].strip())
+                max_area = float(area_str.split()[1].strip())
+                schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl, lower_slab_layers=lower_slab_layers, upper_slab_layers=upper_slab_layers, slab_vacuum=slab_vacuum, min_area=min_area, max_area=max_area)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid interface area: {area_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            interface_gap_str = color_input('\nEnter the interface gap in Å (e.g., "2.0"): ', 'yellow').strip()
+
+            if not interface_gap_str:
+                continue
+
+            try:
+                interface_gap = float(interface_gap_str)
+                schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl, lower_slab_layers=lower_slab_layers, upper_slab_layers=upper_slab_layers, slab_vacuum=slab_vacuum, min_area=min_area, max_area=max_area, interface_gap=interface_gap)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid interface gap: {interface_gap_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            tolerance_str = color_input('\nEnter the lattice vector tolerance (%) and angle tolerance (degrees) (e.g., "5.0 5.0"): ', 'yellow').strip()
+
+            if not tolerance_str:
+                continue
+
+            try:
+                uv_tolerance = float(tolerance_str.split()[0].strip())
+                angle_tolerance = float(tolerance_str.split()[1].strip())
+                schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl, lower_slab_layers=lower_slab_layers, upper_slab_layers=upper_slab_layers, slab_vacuum=slab_vacuum, min_area=min_area, max_area=max_area, interface_gap=interface_gap, uv_tolerance=uv_tolerance, angle_tolerance=angle_tolerance)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid lattice vector tolerance: {tolerance_str}, please double check and try again.\n', 'red')
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            shape_filter_str = color_input('\nDo you want to apply shape filtering to only keep the most square-like interface? [y/n]: ', 'yellow').strip().lower()
+
+            if not shape_filter_str:
+                continue
+
+            if shape_filter_str == 'y':
+                shape_filter = True
+                break
+            elif shape_filter_str == 'n':
+                shape_filter = False
+                break
+            else:
+                continue
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    input = schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl, lower_slab_layers=lower_slab_layers, upper_slab_layers=upper_slab_layers, slab_vacuum=slab_vacuum, min_area=min_area, max_area=max_area, interface_gap=interface_gap, uv_tolerance=uv_tolerance, angle_tolerance=angle_tolerance, shape_filter=shape_filter)
+    print('')
+    with yaspin(Spinners.dots, text='Generating interface structure... See details in the log file.', color='cyan') as sp:
+        result = tools.generate_interface_from_poscars(input=input)
+    color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.2.1', 'Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR).')
 def command_1_2_1():
@@ -719,6 +912,7 @@ def command_1_2_1():
     input = schemas.GenerateVaspInputsFromPoscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets, only_incar=False)
     result = tools.generate_vasp_inputs_from_poscar(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.2.2', 'Generate INCAR templates (relaxation, static, MD, etc.).')
 def command_1_2_2():
@@ -792,6 +986,7 @@ def command_1_2_2():
     input = schemas.GenerateVaspInputsFromPoscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets, only_incar=True)
     result = tools.generate_vasp_inputs_from_poscar(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.2.3', 'Generate KPOINTS with specified accuracy.')
 def command_1_2_3():
@@ -845,6 +1040,7 @@ def command_1_2_3():
     input = schemas.CustomizeVaspKpointsWithAccuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
     result = tools.customize_vasp_kpoints_with_accuracy(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.2.4', 'Generate HPC Slurm job submission script for VASP calculations.')
 def command_1_2_4():
@@ -926,6 +1122,7 @@ def command_1_2_4():
     )
     result = tools.generate_vasp_inputs_hpc_slurm_script(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.3.1', 'Generate VASP workflow for convergence tests for k-points and energy cutoff based on given POSCAR.')
 def command_1_3_1():
@@ -1064,6 +1261,7 @@ def command_1_3_1():
         input = schemas.GenerateVaspWorkflowOfConvergenceTests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels, kpoint_levels=kpoint_levels)
     result = tools.generate_vasp_workflow_of_convergence_tests(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.3.2', 'Generate VASP workflow of equation of state (EOS) calculations based on given POSCAR.')
 def command_1_3_2():
@@ -1096,6 +1294,7 @@ def command_1_3_2():
     input = schemas.GenerateVaspWorkflowOfEos(poscar_path=poscar_path, scale_factors=scale_factors)
     result = tools.generate_vasp_workflow_of_eos(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)
 
 @register('1.3.3', 'Generate VASP workflow for elastic constants calculations based on given POSCAR.')
 def command_1_3_3():
@@ -1109,3 +1308,4 @@ def command_1_3_3():
     input = schemas.GenerateVaspWorkflowOfElasticConstants(poscar_path=poscar_path)
     result = tools.generate_vasp_workflow_of_elastic_constants(input=input)
     color_print(result['message'], 'green')
+    time.sleep(1)

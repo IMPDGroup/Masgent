@@ -26,7 +26,7 @@ Masgent: Materials Simulation Agent
     - 1.1.5 Generate supercells
     - 1.1.6 Generate Special Quasirandom Structures (SQS)
     - 1.1.7 Generate surface slabs
-    - 1.1.8 (Planned) Generate interface structures
+    - 1.1.8 Generate interface structures
   
   - 1.2 VASP Input File Preparation
     - 1.2.1 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)

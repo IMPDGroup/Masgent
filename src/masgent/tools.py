@@ -1,6 +1,7 @@
 # !/usr/bin/env python3
 
 import os, warnings, random, shutil, re
+from typing import Literal, Optional, List, Dict, Any
 import numpy as np
 from pathlib import Path
 from dotenv import load_dotenv
@@ -138,18 +139,24 @@ def rename_file(name: str, new_name: str) -> dict:
     defaults={},
     prereqs=[],
 ))
-def generate_vasp_poscar(input: schemas.GenerateVaspPoscarSchema) -> dict:
+def generate_vasp_poscar(formula: str) -> dict:
     '''
     Generate VASP POSCAR file from Materials Project database.
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar with input: {input}', 'green')
     
-    formula = input.formula
+    try:
+        schemas.GenerateVaspPoscarSchema(formula=formula)
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
-        poscars_dir = os.path.join(runs_dir, f'POSCARs')
+        poscars_dir = os.path.join(runs_dir, f'POSCARs/{formula}')
         os.makedirs(poscars_dir, exist_ok=True)
 
         # Ensure Materials Project API key exists and validate it only once per process
@@ -222,15 +229,27 @@ def generate_vasp_poscar(input: schemas.GenerateVaspPoscarSchema) -> dict:
         },
     prereqs=[],
 ))
-def generate_vasp_inputs_from_poscar(input: schemas.GenerateVaspInputsFromPoscar) -> dict:
+def generate_vasp_inputs_from_poscar(
+    vasp_input_sets: str,
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+    only_incar: bool = False
+) -> dict:
     '''
     Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets.
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_inputs_from_poscar with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    vasp_input_sets = input.vasp_input_sets
-    only_incar = input.only_incar
+    try:
+        schemas.GenerateVaspInputsFromPoscar(
+            poscar_path=poscar_path,
+            vasp_input_sets=vasp_input_sets,
+            only_incar=only_incar,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     VIS_MAP = {
         'MPRelaxSet': MPRelaxSet,
@@ -306,18 +325,33 @@ def generate_vasp_inputs_from_poscar(input: schemas.GenerateVaspInputsFromPoscar
         },
     prereqs=[],
     ))
-def generate_vasp_inputs_hpc_slurm_script(input: schemas.GenerateVaspInputsHpcSlurmScript) -> dict:
+def generate_vasp_inputs_hpc_slurm_script(
+    partition: str = 'normal',
+    nodes: int = 1,
+    ntasks: int = 8,
+    walltime: str = '01:00:00',
+    jobname: str = 'masgent_job',
+    command: str = 'srun vasp_std > vasp.out'
+) -> dict:
     '''
     Generate HPC Slurm job submission script for VASP calculations.
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_inputs_hpc_slurm_script with input: {input}', 'green')
     
-    partition = input.partition
-    nodes = input.nodes
-    ntasks = input.ntasks
-    walltime = input.walltime
-    jobname = input.jobname
-    command = input.command
+    try:
+        schemas.GenerateVaspInputsHpcSlurmScript(
+            partition=partition,
+            nodes=nodes,
+            ntasks=ntasks,
+            walltime=walltime,
+            jobname=jobname,
+            command=command,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
@@ -358,15 +392,27 @@ def generate_vasp_inputs_hpc_slurm_script(input: schemas.GenerateVaspInputsHpcSl
     defaults={},
     prereqs=[],
 ))
-def convert_structure_format(input: schemas.ConvertStructureFormatSchema) -> dict:
+def convert_structure_format(
+    input_path: str,
+    input_format: Literal['POSCAR', 'CIF', 'XYZ'],
+    output_format: Literal['POSCAR', 'CIF', 'XYZ'],
+) -> dict:
     '''
     Convert structure files between different formats (CIF, POSCAR, XYZ).
     '''
     # color_print(f'\n[Debug: Function Calling] convert_structure_format with input: {input}', 'green')
     
-    input_path = input.input_path
-    input_format = input.input_format
-    output_format = input.output_format
+    try:
+        schemas.ConvertStructureFormatSchema(
+            input_path=input_path,
+            input_format=input_format,
+            output_format=output_format,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
     
     format_map = {
         "POSCAR": "vasp",
@@ -409,14 +455,25 @@ def convert_structure_format(input: schemas.ConvertStructureFormatSchema) -> dic
     defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
-def convert_poscar_coordinates(input: schemas.ConvertPoscarCoordinatesSchema) -> dict:
+def convert_poscar_coordinates(
+    to_cartesian: bool,
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+) -> dict:
     '''
     Convert POSCAR between direct and cartesian coordinates.
     '''
     # color_print(f'\n[Debug: Function Calling] convert_poscar_coordinates with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    to_cartesian = input.to_cartesian
+    try:
+        schemas.ConvertPoscarCoordinatesSchema(
+            poscar_path=poscar_path,
+            to_cartesian=to_cartesian,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
@@ -451,14 +508,25 @@ def convert_poscar_coordinates(input: schemas.ConvertPoscarCoordinatesSchema) ->
     defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
-def customize_vasp_kpoints_with_accuracy(input: schemas.CustomizeVaspKpointsWithAccuracy) -> dict:
+def customize_vasp_kpoints_with_accuracy(
+    accuracy_level: Literal['Low', 'Medium', 'High'],
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+) -> dict:
     '''
     Customize VASP KPOINTS from POSCAR with specified accuracy level.
     '''
     # color_print(f'\n[Debug: Function Calling] customize_vasp_kpoints_with_accuracy with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    accuracy_level = input.accuracy_level
+    try:
+        schemas.CustomizeVaspKpointsWithAccuracy(
+            poscar_path=poscar_path,
+            accuracy_level=accuracy_level,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
     
     DENSITY_MAP = {
         'Low': 1000,
@@ -496,20 +564,32 @@ def customize_vasp_kpoints_with_accuracy(input: schemas.CustomizeVaspKpointsWith
     defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
-def generate_vasp_poscar_with_vacancy_defects(input: schemas.GenerateVaspPoscarWithVacancyDefects) -> dict:
+def generate_vasp_poscar_with_vacancy_defects(
+    original_element: str,
+    defect_amount: float | int,
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+) -> dict:
     '''
     Generate VASP POSCAR with vacancy defects.
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_with_vacancy_defects with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    original_element = input.original_element
-    defect_amount = input.defect_amount
+    try:
+        schemas.GenerateVaspPoscarWithVacancyDefects(
+            poscar_path=poscar_path,
+            original_element=original_element,
+            defect_amount=defect_amount,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
-        defect_dir = os.path.join(runs_dir, 'defects')
+        defect_dir = os.path.join(runs_dir, 'defects/vacancies')
         os.makedirs(defect_dir, exist_ok=True)
         
         atoms = read(poscar_path, format='vasp')
@@ -548,21 +628,34 @@ def generate_vasp_poscar_with_vacancy_defects(input: schemas.GenerateVaspPoscarW
     defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
-def generate_vasp_poscar_with_substitution_defects(input: schemas.GenerateVaspPoscarWithSubstitutionDefects) -> dict:
+def generate_vasp_poscar_with_substitution_defects(
+    original_element: str,
+    defect_element: str,
+    defect_amount: float | int,
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+) -> dict:
     '''
     Generate VASP POSCAR with substitution defects.
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_with_substitution_defects with input: {input}', 'green')
 
-    poscar_path = input.poscar_path
-    original_element = input.original_element
-    defect_element = input.defect_element
-    defect_amount = input.defect_amount
+    try:
+        schemas.GenerateVaspPoscarWithSubstitutionDefects(
+            poscar_path=poscar_path,
+            original_element=original_element,
+            defect_element=defect_element,
+            defect_amount=defect_amount,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
-        defect_dir = os.path.join(runs_dir, 'defects')
+        defect_dir = os.path.join(runs_dir, 'defects/substitutions')
         os.makedirs(defect_dir, exist_ok=True)
         
         atoms = read(poscar_path, format='vasp')
@@ -601,19 +694,30 @@ def generate_vasp_poscar_with_substitution_defects(input: schemas.GenerateVaspPo
     defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
-def generate_vasp_poscar_with_interstitial_defects(input: schemas.GenerateVaspPoscarWithInterstitialDefects) -> dict:
+def generate_vasp_poscar_with_interstitial_defects(
+    defect_element: str,
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+) -> dict:
     '''
     Generate VASP POSCAR with interstitial (Voronoi) defects.
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_with_interstitial_defects with input: {input}', 'green')
 
-    poscar_path = input.poscar_path
-    defect_element = input.defect_element
+    try:
+        schemas.GenerateVaspPoscarWithInterstitialDefects(
+            poscar_path=poscar_path,
+            defect_element=defect_element,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
-        defect_dir = os.path.join(runs_dir, 'defects')
+        defect_dir = os.path.join(runs_dir, 'defects/interstitials')
         os.makedirs(defect_dir, exist_ok=True)
         
         atoms = read(poscar_path, format='vasp')
@@ -660,14 +764,25 @@ def generate_vasp_poscar_with_interstitial_defects(input: schemas.GenerateVaspPo
     defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
-def generate_supercell_from_poscar(input: schemas.GenerateSupercellFromPoscar) -> dict:
+def generate_supercell_from_poscar(
+    scaling_matrix: str,
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+) -> dict:
     '''
     Generate supercell from POSCAR based on user-defined 3x3 scaling matrix.
     '''
     # color_print(f'\n[Debug: Function Calling] generate_supercell_from_poscar with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    scaling_matrix = input.scaling_matrix
+    try:
+        schemas.GenerateSupercellFromPoscar(
+            poscar_path=poscar_path,
+            scaling_matrix=scaling_matrix,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     scaling_matrix_ = [
         [int(num) for num in line.strip().split()] 
@@ -703,7 +818,7 @@ def generate_supercell_from_poscar(input: schemas.GenerateSupercellFromPoscar) -
 @with_metadata(schemas.ToolMetadata(
     name='Generate Special Quasirandom Structures (SQS)',
     description='Generate Special Quasirandom Structures (SQS) using icet based on given POSCAR',
-    requires=['target_sites', 'target_concentrations'],
+    requires=['target_configurations'],
     optional=['poscar_path', 'cutoffs', 'max_supercell_size', 'mc_steps'],
     defaults={
         'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
@@ -712,16 +827,31 @@ def generate_supercell_from_poscar(input: schemas.GenerateSupercellFromPoscar) -
         'mc_steps': 10000,
     },
 ))
-def generate_sqs_from_poscar(input: schemas.GenerateSqsFromPoscar) -> dict:
+def generate_sqs_from_poscar(
+    target_configurations: dict[str, dict[str, float]],
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+    cutoffs: list[float] = [8.0, 4.0],
+    max_supercell_size: int = 8,
+    mc_steps: int = 10000,
+) -> dict:
     '''
     Generate Special Quasirandom Structures (SQS) using icet.
     '''
+    # color_print(f'\n[Debug: Function Calling] generate_sqs_from_poscar with input: {input}', 'green')
 
-    poscar_path = input.poscar_path # e.g., 'LaCoO3'
-    target_configurations = input.target_configurations # e.g., {'La': {'La': 0.5, 'Y': 0.5}, 'Co': {'Al': 0.75, 'Co': 0.25}}
-    cutoffs = input.cutoffs
-    max_supercell_size = input.max_supercell_size
-    mc_steps = input.mc_steps
+    try:
+        schemas.GenerateSqsFromPoscar(
+            poscar_path=poscar_path,
+            target_configurations=target_configurations,
+            cutoffs=cutoffs,
+            max_supercell_size=max_supercell_size,
+            mc_steps=mc_steps,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
@@ -821,16 +951,29 @@ def generate_sqs_from_poscar(input: schemas.GenerateSqsFromPoscar) -> dict:
         },
     prereqs=[],
 ))
-def generate_surface_slab_from_poscar(input: schemas.GenerateSurfaceSlabFromPoscar) -> dict:
+def generate_surface_slab_from_poscar(
+    miller_indices: List[int],
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+    vacuum_thickness: float = 15.0,
+    slab_layers: int = 4,
+) -> dict:
     '''
     Generate VASP POSCAR for surface slab from bulk POSCAR based on Miller indices, vacuum thickness, and slab layers
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_for_surface_slab with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    miller_indices = input.miller_indices
-    vacuum_thickness = input.vacuum_thickness
-    slab_layers = input.slab_layers
+    try:
+        schemas.GenerateSurfaceSlabFromPoscar(
+            poscar_path=poscar_path,
+            miller_indices=miller_indices,
+            vacuum_thickness=vacuum_thickness,
+            slab_layers=slab_layers,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
@@ -858,7 +1001,7 @@ def generate_surface_slab_from_poscar(input: schemas.GenerateSurfaceSlabFromPosc
 
 @with_metadata(schemas.ToolMetadata(
     name='Generate interface from two POSCARs',
-    description='Generate VASP POSCAR for interface from two given POSCAR files based on specified parameters: lower and upper Miller indices (hkl) of the slabs, number of lower and upper slab layers, vacuum thickness of the slabs, minimum and maximum interface area, interface gap, lattice vector (uv) tolerance in percentage, angle tolerance in degrees, and shape filter option to keep only the most square-like interfaces',
+    description='Generate VASP POSCAR for interface from two given POSCAR files based on specified parameters',
     requires=['lower_poscar_path', 'upper_poscar_path', 'lower_hkl', 'upper_hkl'],
     optional=['lower_slab_layers', 'upper_slab_layers', 'slab_vacuum', 'min_area', 'max_area', 'interface_gap', 'uv_tolerance', 'angle_tolerance', 'shape_filter'],
     defaults={
@@ -874,24 +1017,47 @@ def generate_surface_slab_from_poscar(input: schemas.GenerateSurfaceSlabFromPosc
         },
     prereqs=[],
 ))
-def generate_interface_from_poscars(input: schemas.GenerateInterfaceFromPoscars) -> dict:
+def generate_interface_from_poscars(
+    lower_poscar_path: str,
+    upper_poscar_path: str,
+    lower_hkl: List[int],
+    upper_hkl: List[int],
+    lower_slab_layers: int = 4,
+    upper_slab_layers: int = 4,
+    slab_vacuum: float = 15.0,
+    min_area: float = 50.0,
+    max_area: float = 500.0,
+    interface_gap: float = 2.0,
+    uv_tolerance: float = 5.0,
+    angle_tolerance: float = 5.0,
+    shape_filter: bool = False,
+) -> dict:
     '''
     Generate VASP POSCAR for interface from two given POSCAR files based on specified parameters
     '''
+    # print(f'\n[Debug: Function Calling] generate_interface_from_poscars with input: {input}', 'green')
     
-    lower_poscar_path = input.lower_poscar_path
-    upper_poscar_path = input.upper_poscar_path
-    lower_hkl = input.lower_hkl
-    upper_hkl = input.upper_hkl
-    lower_slab_layers = input.lower_slab_layers
-    upper_slab_layers = input.upper_slab_layers
-    slab_vacuum = input.slab_vacuum
-    min_area = input.min_area
-    max_area = input.max_area
-    interface_gap = input.interface_gap
-    uv_tolerance = input.uv_tolerance
-    angle_tolerance = input.angle_tolerance
-    shape_filter = input.shape_filter
+    try:
+        schemas.GenerateInterfaceFromPoscars(
+            lower_poscar_path=lower_poscar_path,
+            upper_poscar_path=upper_poscar_path,
+            lower_hkl=lower_hkl,
+            upper_hkl=upper_hkl,
+            lower_slab_layers=lower_slab_layers,
+            upper_slab_layers=upper_slab_layers,
+            slab_vacuum=slab_vacuum,
+            min_area=min_area,
+            max_area=max_area,
+            interface_gap=interface_gap,
+            uv_tolerance=uv_tolerance,
+            angle_tolerance=angle_tolerance,
+            shape_filter=shape_filter,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
@@ -932,24 +1098,38 @@ def generate_interface_from_poscars(input: schemas.GenerateInterfaceFromPoscars)
     name='Generate VASP input files and submit bash script for workflow of convergence tests',
     description='Generate VASP workflow of convergence tests for k-points and energy cutoff based on given POSCAR',
     requires=[],
-    optional=['poscar_path', 'kpoint_levels', 'encut_levels'],
+    optional=['poscar_path', 'test_type', 'kpoint_levels', 'encut_levels'],
     defaults={
         'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+        'test_type': 'both',
         'kpoint_levels': [1000, 2000, 3000, 4000, 5000],
         'encut_levels': [300, 400, 500, 600, 700],
         },
     prereqs=[],
 ))
-def generate_vasp_workflow_of_convergence_tests(input: schemas.GenerateVaspWorkflowOfConvergenceTests) -> dict:
+def generate_vasp_workflow_of_convergence_tests(
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+    test_type: Literal['kpoints', 'encut', 'both'] = 'both',
+    kpoint_levels: List[int] = [1000, 2000, 3000, 4000, 5000],
+    encut_levels: List[int] = [300, 400, 500, 600, 700],
+) -> dict:
     '''
     Generate VASP input files and submit bash script for workflow of convergence tests for k-points and energy cutoff based on given POSCAR
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_convergence_tests with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    test_type = input.test_type
-    kpoint_levels = input.kpoint_levels
-    encut_levels = input.encut_levels
+    try:
+        schemas.GenerateVaspWorkflowOfConvergenceTests(
+            poscar_path=poscar_path,
+            test_type=test_type,
+            kpoint_levels=kpoint_levels,
+            encut_levels=encut_levels,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     def test_kpoints():
         for kppa in kpoint_levels:
@@ -1042,14 +1222,25 @@ def generate_vasp_workflow_of_convergence_tests(input: schemas.GenerateVaspWorkf
         },
     prereqs=[],
 ))
-def generate_vasp_workflow_of_eos(input: schemas.GenerateVaspWorkflowOfEos) -> dict:
+def generate_vasp_workflow_of_eos(
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+    scale_factors: List[float] = [0.94, 0.96, 0.98, 1.00, 1.02, 1.04, 1.06],
+) -> dict:
     '''
     Generate VASP input files and submit bash script for workflow of equation of state (EOS) calculations based on given POSCAR
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_eos with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
-    scale_factors = input.scale_factors
+    try:
+        schemas.GenerateVaspWorkflowOfEos(
+            poscar_path=poscar_path,
+            scale_factors=scale_factors,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
@@ -1104,13 +1295,21 @@ def generate_vasp_workflow_of_eos(input: schemas.GenerateVaspWorkflowOfEos) -> d
     defaults={'poscar_path': f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR'},
     prereqs=[],
 ))
-def generate_vasp_workflow_of_elastic_constants(input: schemas.GenerateVaspWorkflowOfElasticConstants) -> dict:
+def generate_vasp_workflow_of_elastic_constants(
+    poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
+) -> dict:
     '''
     Generate VASP input files and submit bash script for workflow of elastic constants calculations based on given POSCAR
     '''
     # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_elastic_constants with input: {input}', 'green')
     
-    poscar_path = input.poscar_path
+    try:
+        schemas.GenerateVaspWorkflowOfElasticConstants(poscar_path=poscar_path)
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
 
     try:
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')

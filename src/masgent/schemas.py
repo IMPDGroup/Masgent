@@ -179,7 +179,7 @@ class ConvertPoscarCoordinatesSchema(BaseModel):
     '''
     Schema for converting POSCAR between direct and cartesian coordinates.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -207,7 +207,7 @@ class GenerateVaspInputsFromPoscar(BaseModel):
     '''
     Schema for generating VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -244,32 +244,32 @@ class GenerateVaspInputsHpcSlurmScript(BaseModel):
     '''
     Schema for generating HPC Slurm job submission script for VASP calculations.
     '''
-    partition: Optional[str] = Field(
+    partition: str = Field(
         'normal',
         description='Slurm partition/queue name. Defaults to "normal" if not provided.'
     )
 
-    nodes: Optional[int] = Field(
+    nodes: int = Field(
         1,
         description='Number of nodes to request. Defaults to 1 if not provided.'
     )
 
-    ntasks: Optional[int] = Field(
+    ntasks: int = Field(
         8,
         description='Number of tasks (cores) to request. Defaults to 8 if not provided.'
     )
 
-    walltime: Optional[str] = Field(
+    walltime: str = Field(
         '00:10:00',
         description='Walltime limit in format HH:MM:SS. Defaults to "00:10:00" if not provided.'
     )
 
-    jobname: Optional[str] = Field(
+    jobname: str = Field(
         'masgent_job',
         description='Name of the job. Defaults to "masgent_job" if not provided.'
     )
 
-    command: Optional[str] = Field(
+    command: str = Field(
         'srun vasp_std > vasp.out',
         description='Command to execute the job. Defaults to "srun vasp_std > vasp.out" if not provided.'
     )
@@ -294,7 +294,7 @@ class CustomizeVaspKpointsWithAccuracy(BaseModel):
     '''
     Schema for customizing VASP KPOINTS from POSCAR with specified accuracy level.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -324,7 +324,7 @@ class GenerateVaspPoscarWithVacancyDefects(BaseModel):
     '''
     Schema for generating VASP POSCAR with vacancy defects.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the original POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -388,7 +388,7 @@ class GenerateVaspPoscarWithSubstitutionDefects(BaseModel):
     '''
     Schema for generating VASP POSCAR with substitution defects.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the original POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -464,7 +464,7 @@ class GenerateVaspPoscarWithInterstitialDefects(BaseModel):
     '''
     Schema for generating VASP POSCAR with interstitial (Voronoi) defects.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the original POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -499,7 +499,7 @@ class GenerateSupercellFromPoscar(BaseModel):
     '''
     Schema for generating supercell from POSCAR file.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -540,7 +540,7 @@ class GenerateSqsFromPoscar(BaseModel):
     '''
     Schema for generating Special Quasirandom Structures (SQS) from a given POSCAR file.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -550,17 +550,17 @@ class GenerateSqsFromPoscar(BaseModel):
         description='Dictionary specifying target configurations for each sublattice. E.g., {"La": {"La": 0.5, "Y": 0.5}, "Co": {"Al": 0.75, "Co": 0.25}}'
     )
 
-    cutoffs: Optional[List[float]] = Field(
+    cutoffs: List[float] = Field(
         [8.0, 4.0],
         description='List of cutoff distances (in Angstroms) for cluster expansion. Defaults to [8.0, 4.0] if not provided.'
     )
 
-    max_supercell_size: Optional[int] = Field(
+    max_supercell_size: int = Field(
         8,
         description='Maximum size of the supercell (number of primitive cells). Defaults to 8 if not provided.'
     )
 
-    mc_steps: Optional[int] = Field(
+    mc_steps: int = Field(
         10000,
         description='Number of Monte Carlo steps for SQS generation. Defaults to 10000 if not provided.'
     )
@@ -613,7 +613,7 @@ class GenerateSurfaceSlabFromPoscar(BaseModel):
     '''
     Schema for generating surface slab from bulk POSCAR.
     '''
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the bulk POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
@@ -623,12 +623,12 @@ class GenerateSurfaceSlabFromPoscar(BaseModel):
         description='Miller indices [h, k, l] for the surface slab, e.g., [1, 0, 0].'
     )
 
-    vacuum_thickness: Optional[float] = Field(
+    vacuum_thickness: float = Field(
         15.0,
         description='Vacuum thickness in Angstroms. Defaults to 15.0 Å if not provided.'
     )
 
-    slab_layers: Optional[int] = Field(
+    slab_layers: int = Field(
         4,
         description='Number of atomic layers in the slab. Defaults to 4 if not provided.'
     )
@@ -684,47 +684,47 @@ class GenerateInterfaceFromPoscars(BaseModel):
         description='Miller indices [h, k, l] for the upper structure surface.'
     )
 
-    lower_slab_layers: Optional[int] = Field(
+    lower_slab_layers: int = Field(
         4,
         description='Number of atomic layers in the lower slab. Defaults to 4 if not provided.'
     )
 
-    upper_slab_layers: Optional[int] = Field(
+    upper_slab_layers: int = Field(
         4,
         description='Number of atomic layers in the upper slab. Defaults to 4 if not provided.'
     )
 
-    slab_vacuum: Optional[float] = Field(
+    slab_vacuum: float = Field(
         15.0,
         description='Vacuum thickness in Angstroms. Defaults to 15.0 Å if not provided.'
     )
 
-    min_area: Optional[float] = Field(
+    min_area: float = Field(
         50.0,
         description='Minimum interface area in square Angstroms. Defaults to 50.0 Å² if not provided.'
     )
 
-    max_area: Optional[float] = Field(
+    max_area: float = Field(
         500.0,
         description='Maximum interface area in square Angstroms. Defaults to 500.0 Å² if not provided.'
     )
 
-    interface_gap: Optional[float] = Field(
+    interface_gap: float = Field(
         2.0,
         description='Gap distance between the two slabs in Angstroms. Defaults to 2.0 Å if not provided.'
     )
 
-    uv_tolerance: Optional[float] = Field(
+    uv_tolerance: float = Field(
         5.0,
         description='Tolerance for matching in-plane lattice vectors in percentage. Defaults to 5.0% if not provided.'
     )
 
-    angle_tolerance: Optional[float] = Field(
+    angle_tolerance: float = Field(
         5.0,
         description='Tolerance for angle matching between in-plane lattice vectors in degrees. Defaults to 5.0° if not provided.'
     )
 
-    shape_filter: Optional[bool] = Field(
+    shape_filter: bool = Field(
         False,
         description='If True, apply shape filtering to keep only the most square-like interfaces. If False, keep all matching interfaces. Defaults to False if not provided.'
     )
@@ -795,22 +795,22 @@ class GenerateVaspWorkflowOfConvergenceTests(BaseModel):
     Schema for generating VASP input files and submit bash script for workflow of convergence tests for k-points and energy cutoff based on given POSCAR
     '''
 
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
 
-    test_type: Optional[Literal['kpoints', 'encut', 'all']] = Field(
+    test_type: Literal['kpoints', 'encut', 'all'] = Field(
         'all',
         description='Type of convergence test to perform: "kpoints", "encut", or "all". Defaults to "all" if not provided.'
     )
 
-    kpoint_levels: Optional[List[int]] = Field(
+    kpoint_levels: List[int] = Field(
         [1000, 2000, 3000, 4000, 5000],
         description='List of k-point density levels to test. Defaults to [1000, 2000, 3000, 4000, 5000] if not provided.'
     )
 
-    encut_levels: Optional[List[int]] = Field(
+    encut_levels: List[int] = Field(
         [300, 400, 500, 600, 700],
         description='List of energy cutoff levels (in eV) to test. Defaults to [300, 400, 500, 600, 700] if not provided.'
     )
@@ -842,12 +842,12 @@ class GenerateVaspWorkflowOfEos(BaseModel):
     Schema for generating VASP input files and submit bash script for workflow of equation of state (EOS) calculations based on given POSCAR
     '''
     
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
 
-    scale_factors: Optional[List[float]] = Field(
+    scale_factors: List[float] = Field(
         [0.94, 0.96, 0.98, 1.00, 1.02, 1.04, 1.06],
         description='List of scale factors to apply to the lattice vectors for EOS calculations. Defaults to [0.94, 0.96, 0.98, 1.00, 1.02, 1.04, 1.06] if not provided.'
     )
@@ -875,7 +875,7 @@ class GenerateVaspWorkflowOfElasticConstants(BaseModel):
     Schema for generating VASP input files and submit bash script for workflow of elastic constants calculations based on given POSCAR
     '''
     
-    poscar_path: Optional[str] = Field(
+    poscar_path: str = Field(
         os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
         description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )

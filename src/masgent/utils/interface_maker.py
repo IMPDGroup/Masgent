@@ -118,8 +118,8 @@ def gen_intf(i, profile):
     # Write the transformed slab data
     save_path = f'{OUTPUT_DIR}/interfaces/intf_{i+1}_slabs'
     os.makedirs(save_path)
-    write(f'{save_path}/intf_{i+1}_slab_0_{hkl_0}.vasp', slab_0, format='vasp', direct=False)
-    write(f'{save_path}/intf_{i+1}_slab_1_{hkl_1}.vasp', slab_1, format='vasp', direct=False)
+    write(f'{save_path}/intf_{i+1}_slab_0_{hkl_0}.vasp', slab_0, format='vasp', direct=True, sort=True)
+    write(f'{save_path}/intf_{i+1}_slab_1_{hkl_1}.vasp', slab_1, format='vasp', direct=True, sort=True)
 
     comb = [(slab_0, slab_1), (slab_0_reverse, slab_1), (slab_0, slab_1_reverse), (slab_0_reverse, slab_1_reverse)]
     for j, (slab_0, slab_1) in enumerate(comb):
@@ -179,7 +179,7 @@ def gen_intf(i, profile):
             interface.positions[:, 2] = interface_thickness-interface.positions[:, 2]
         
         # Write the interface
-        write(f'{OUTPUT_DIR}/interfaces/intf_{i+1}_{j+1}_{hkl_0}_{hkl_1}.vasp', interface, format='vasp', direct=False, sort=True)
+        write(f'{OUTPUT_DIR}/interfaces/intf_{i+1}_{j+1}_{hkl_0}_{hkl_1}.vasp', interface, format='vasp', direct=True, sort=True)
 
         # Store the lattice matching data
         with open(f'{OUTPUT_DIR}/interface_maker.log', 'a') as f:
@@ -263,7 +263,7 @@ def slab_maker(cell_conv, miller_indices, vacuum, layers):
     for i, slab in enumerate(slabs):
         h, k, l = miller_indices[i]
         if i not in same_idx:
-            write(f'{OUTPUT_DIR}/slabs/slab_{h}{k}{l}_{cell_name}.vasp', slab, format='vasp', direct=False, sort=False)
+            write(f'{OUTPUT_DIR}/slabs/slab_{h}{k}{l}_{cell_name}.vasp', slab, format='vasp', direct=True, sort=True)
 
     ''' Data format:
     0 - Miller index: hkl

@@ -112,8 +112,7 @@ def command_1_1_1():
         time.sleep(1)
         return
 
-    input = schemas.GenerateVaspPoscarSchema(formula=formula)
-    result = tools.generate_vasp_poscar(input=input)
+    result = tools.generate_vasp_poscar(formula=formula)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -162,8 +161,7 @@ def command_1_1_2():
         time.sleep(1)
         return
 
-    input = schemas.ConvertPoscarCoordinatesSchema(poscar_path=poscar_path, to_cartesian=to_cartesian)
-    result = tools.convert_poscar_coordinates(input=input)
+    result = tools.convert_poscar_coordinates(poscar_path=poscar_path, to_cartesian=to_cartesian)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -239,8 +237,7 @@ def command_1_1_3():
         time.sleep(1)
         return
 
-    input = schemas.ConvertStructureFormatSchema(input_path=input_path, input_format=input_format, output_format=output_format)
-    result = tools.convert_structure_format(input=input)
+    result = tools.convert_structure_format(input_path=input_path, input_format=input_format, output_format=output_format)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -337,8 +334,7 @@ def command_vacancy():
         time.sleep(1)
         return
 
-    input = schemas.GenerateVaspPoscarWithVacancyDefects(poscar_path=poscar_path, original_element=original_element, defect_amount=defect_amount)
-    result = tools.generate_vasp_poscar_with_vacancy_defects(input=input)
+    result = tools.generate_vasp_poscar_with_vacancy_defects(poscar_path=poscar_path, original_element=original_element, defect_amount=defect_amount)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -409,8 +405,7 @@ def command_substitution():
         time.sleep(1)
         return
 
-    input = schemas.GenerateVaspPoscarWithSubstitutionDefects(poscar_path=poscar_path, original_element=original_element, defect_element=defect_element, defect_amount=defect_amount)
-    result = tools.generate_vasp_poscar_with_substitution_defects(input=input)
+    result = tools.generate_vasp_poscar_with_substitution_defects(poscar_path=poscar_path, original_element=original_element, defect_element=defect_element, defect_amount=defect_amount)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -440,10 +435,9 @@ def command_interstitial():
         time.sleep(1)
         return
 
-    input = schemas.GenerateVaspPoscarWithInterstitialDefects(poscar_path=poscar_path, defect_element=defect_element)
     print('')
     with yaspin(Spinners.dots, text='Generating SQS... See details in the log file.', color='cyan') as sp:
-        result = tools.generate_vasp_poscar_with_interstitial_defects(input=input)
+        result = tools.generate_vasp_poscar_with_interstitial_defects(poscar_path=poscar_path, defect_element=defect_element)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -458,25 +452,24 @@ def command_1_1_5():
     
     try:
         while True:
-            sm = color_input('\nEnter the scaling matrix (e.g., "2 0 0; 0 2 0; 0 0 2" for 2x2x2 supercell): ', 'yellow').strip()
+            scaling_matrix = color_input('\nEnter the scaling matrix (e.g., "2 0 0; 0 2 0; 0 0 2" for 2x2x2 supercell): ', 'yellow').strip()
 
-            if not sm:
+            if not scaling_matrix:
                 continue
             
             try:
-                schemas.GenerateSupercellFromPoscar(poscar_path=poscar_path, scaling_matrix=sm)
+                schemas.GenerateSupercellFromPoscar(poscar_path=poscar_path, scaling_matrix=scaling_matrix)
                 break
 
             except Exception:
-                color_print(f'[Error] Invalid scaling matrix: {sm}, please double check and try again.\n', 'red')
+                color_print(f'[Error] Invalid scaling matrix: {scaling_matrix}, please double check and try again.\n', 'red')
 
     except (KeyboardInterrupt, EOFError):
         color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
         time.sleep(1)
         return
     
-    input = schemas.GenerateSupercellFromPoscar(poscar_path=poscar_path, scaling_matrix=sm)
-    result = tools.generate_supercell_from_poscar(input=input)
+    result = tools.generate_supercell_from_poscar(poscar_path=poscar_path, scaling_matrix=scaling_matrix)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -513,7 +506,8 @@ def command_1_1_6():
                     target_configurations[element] = conc_dict
                 schemas.GenerateSqsFromPoscar(poscar_path=poscar_path, target_configurations=target_configurations)
                 break
-            except Exception:
+            except Exception as e:
+                print(e)
                 color_print(f'[Error] Invalid target configurations: {target_configurations_str}, please double check and try again.\n', 'red')
     
     except (KeyboardInterrupt, EOFError):
@@ -578,10 +572,15 @@ def command_1_1_6():
         time.sleep(1)
         return
     
-    input = schemas.GenerateSqsFromPoscar(poscar_path=poscar_path, target_configurations=target_configurations, cutoffs=cutoffs, max_supercell_size=max_supercell_size, mc_steps=mc_steps)
     print('')
     with yaspin(Spinners.dots, text='Generating SQS... See details in the log file.', color='cyan') as sp:
-        result = tools.generate_sqs_from_poscar(input=input)
+        result = tools.generate_sqs_from_poscar(
+            poscar_path=poscar_path, 
+            target_configurations=target_configurations, 
+            cutoffs=cutoffs, 
+            max_supercell_size=max_supercell_size, 
+            mc_steps=mc_steps
+        )
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -651,8 +650,7 @@ def command_1_1_7():
         time.sleep(1)
         return
     
-    input = schemas.GenerateSurfaceSlabFromPoscar(poscar_path=poscar_path, miller_indices=miller_indices, vacuum_thickness=vacuum_thickness, slab_layers=slab_layers)
-    result = tools.generate_surface_slab_from_poscar(input=input)
+    result = tools.generate_surface_slab_from_poscar(poscar_path=poscar_path, miller_indices=miller_indices, vacuum_thickness=vacuum_thickness, slab_layers=slab_layers)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -833,10 +831,23 @@ def command_1_1_8():
         time.sleep(1)
         return
     
-    input = schemas.GenerateInterfaceFromPoscars(lower_poscar_path=lower_poscar_path, upper_poscar_path=upper_poscar_path, lower_hkl=lower_hkl, upper_hkl=upper_hkl, lower_slab_layers=lower_slab_layers, upper_slab_layers=upper_slab_layers, slab_vacuum=slab_vacuum, min_area=min_area, max_area=max_area, interface_gap=interface_gap, uv_tolerance=uv_tolerance, angle_tolerance=angle_tolerance, shape_filter=shape_filter)
     print('')
     with yaspin(Spinners.dots, text='Generating interface structure... See details in the log file.', color='cyan') as sp:
-        result = tools.generate_interface_from_poscars(input=input)
+        result = tools.generate_interface_from_poscars(
+            lower_poscar_path=lower_poscar_path, 
+            upper_poscar_path=upper_poscar_path, 
+            lower_hkl=lower_hkl, 
+            upper_hkl=upper_hkl, 
+            lower_slab_layers=lower_slab_layers, 
+            upper_slab_layers=upper_slab_layers, 
+            slab_vacuum=slab_vacuum, 
+            min_area=min_area, 
+            max_area=max_area, 
+            interface_gap=interface_gap, 
+            uv_tolerance=uv_tolerance, 
+            angle_tolerance=angle_tolerance, 
+            shape_filter=shape_filter
+        )
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -909,8 +920,7 @@ def command_1_2_1():
         time.sleep(1)
         return
 
-    input = schemas.GenerateVaspInputsFromPoscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets, only_incar=False)
-    result = tools.generate_vasp_inputs_from_poscar(input=input)
+    result = tools.generate_vasp_inputs_from_poscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets, only_incar=False)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -983,8 +993,7 @@ def command_1_2_2():
         time.sleep(1)
         return
 
-    input = schemas.GenerateVaspInputsFromPoscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets, only_incar=True)
-    result = tools.generate_vasp_inputs_from_poscar(input=input)
+    result = tools.generate_vasp_inputs_from_poscar(poscar_path=poscar_path, vasp_input_sets=vasp_input_sets, only_incar=True)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -1037,8 +1046,7 @@ def command_1_2_3():
         time.sleep(1)
         return
 
-    input = schemas.CustomizeVaspKpointsWithAccuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
-    result = tools.customize_vasp_kpoints_with_accuracy(input=input)
+    result = tools.customize_vasp_kpoints_with_accuracy(poscar_path=poscar_path, accuracy_level=accuracy_level)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -1104,23 +1112,22 @@ def command_1_2_4():
         return
 
     try:
-        job_name = color_input('\nEnter the job name (default: masgent_job): ', 'yellow').strip()
-        if not job_name:
-            job_name = 'masgent_job'
+        jobname = color_input('\nEnter the job name (default: masgent_job): ', 'yellow').strip()
+        if not jobname:
+            jobname = 'masgent_job'
     except (KeyboardInterrupt, EOFError):
         color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
         time.sleep(1)
         return
     
-    input = schemas.GenerateVaspInputsHpcSlurmScript(
+    result = tools.generate_vasp_inputs_hpc_slurm_script(
         partition=partition,
         nodes=nodes,
         ntasks=ntasks,
         walltime=walltime,
-        job_name=job_name,
+        jobname=jobname,
         command='srun vasp_std > vasp.out'
     )
-    result = tools.generate_vasp_inputs_hpc_slurm_script(input=input)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -1253,13 +1260,7 @@ def command_1_3_1():
             time.sleep(1)
             return
     
-    if test_type == 'encut':
-        input = schemas.GenerateVaspWorkflowOfConvergenceTests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels)
-    elif test_type == 'kpoints':
-        input = schemas.GenerateVaspWorkflowOfConvergenceTests(poscar_path=poscar_path, test_type=test_type, kpoint_levels=kpoint_levels)
-    else:
-        input = schemas.GenerateVaspWorkflowOfConvergenceTests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels, kpoint_levels=kpoint_levels)
-    result = tools.generate_vasp_workflow_of_convergence_tests(input=input)
+    result = tools.generate_vasp_workflow_of_convergence_tests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels, kpoint_levels=kpoint_levels)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -1291,8 +1292,7 @@ def command_1_3_2():
         time.sleep(1)
         return
     
-    input = schemas.GenerateVaspWorkflowOfEos(poscar_path=poscar_path, scale_factors=scale_factors)
-    result = tools.generate_vasp_workflow_of_eos(input=input)
+    result = tools.generate_vasp_workflow_of_eos(poscar_path=poscar_path, scale_factors=scale_factors)
     color_print(result['message'], 'green')
     time.sleep(1)
 
@@ -1305,7 +1305,6 @@ def command_1_3_3():
         time.sleep(1)
         return
 
-    input = schemas.GenerateVaspWorkflowOfElasticConstants(poscar_path=poscar_path)
-    result = tools.generate_vasp_workflow_of_elastic_constants(input=input)
+    result = tools.generate_vasp_workflow_of_elastic_constants(poscar_path=poscar_path)
     color_print(result['message'], 'green')
     time.sleep(1)

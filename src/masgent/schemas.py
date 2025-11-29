@@ -18,7 +18,7 @@ class ToolMetadata(BaseModel):
     requires: List[str] = Field(..., description='List of required input parameters for the tool.')
     optional: List[str] = Field([], description='List of optional input parameters for the tool.')
     defaults: Dict[str, Any] = Field({}, description='Dictionary of default values for optional parameters.')
-    prereqs: List[str] = Field([], description='List of prerequisite tools that must be run before this tool.')
+    prereqs: List[str] = Field(..., description='Prerequisite condition that must be satisfied before running the tool.')
 
 class CheckPoscar(BaseModel):
     '''

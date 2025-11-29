@@ -826,6 +826,7 @@ def generate_supercell_from_poscar(
         'max_supercell_size': 8,
         'mc_steps': 10000,
     },
+    prereqs=[],
 ))
 def generate_sqs_from_poscar(
     target_configurations: dict[str, dict[str, float]],

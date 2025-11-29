@@ -893,3 +893,55 @@ class GenerateVaspWorkflowOfElasticConstants(BaseModel):
             raise ValueError(f'Invalid POSCAR file: {self.poscar_path}')
 
         return self
+    
+class FastSimulationUsingMlps(BaseModel):
+    '''
+    Schema for performing fast simulation using machine learning potentials (MLPs) based on given POSCAR
+    '''
+    
+    poscar_path: str = Field(
+        os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
+        description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
+    )
+
+    mlps_type: Literal['SevenNet'] = Field(
+        'SevenNet',
+        description='Type of machine learning potentials (MLPs) to use. Defaults to "SevenNet" if not provided.'
+    )
+
+    fmax: float = Field(
+        1.0,
+        description='Maximum force convergence criterion in eV/Å. Defaults to 1.0 eV/Å if not provided.'
+    )
+
+    max_steps: int = Field(
+        1000,
+        description='Maximum number of simulation steps. Defaults to 1000 if not provided.'
+    )
+
+    task_type: Literal['single_point', 'eos'] = Field(
+        'single_point',
+        description='Type of simulation task to perform. Defaults to "single_point" if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure POSCAR exists
+        if not os.path.isfile(self.poscar_path):
+            raise ValueError(f'POSCAR file not found: {self.poscar_path}')
+        
+        # ensure the poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid POSCAR file: {self.poscar_path}')
+        
+        # validate fmax
+        if self.fmax <= 0:
+            raise ValueError('Maximum force convergence criterion (fmax) must be a positive number.')
+        
+        # validate max_steps
+        if self.max_steps < 1:
+            raise ValueError('Maximum number of simulation steps (max_steps) must be at least 1.')
+
+        return self

@@ -41,7 +41,8 @@ Masgent: Materials Simulation Agent
   
   - 1.4 (Planned) VASP Output Analysis
 
-2. (Planned) Fast Simulations Using Machine Learning Potentials (MLPs)
+2. Fast Simulations Using Machine Learning Potentials (MLPs)
+  - 2.1 SevenNet
 
 3. (Planned) Machine Learning Model Training & Evaluation
 

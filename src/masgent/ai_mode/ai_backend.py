@@ -225,6 +225,7 @@ def main():
             tools.generate_vasp_workflow_of_convergence_tests,
             tools.generate_vasp_workflow_of_eos,
             tools.generate_vasp_workflow_of_elastic_constants,
+            tools.fast_simulation_using_mlps,
         ],
         history_processors=[keep_recent_messages],
         )

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "masgent"
-version = "1.0.10"
+version = "1.0.11"
 description = "Masgent: Materials Simulation Agent"
 readme = "README.md"
 authors = [{name = "Guangchen Liu", email = "gliu4@wpi.edu"}]
@@ -13,18 +13,23 @@ keywords = ["AI agent", "Materials Science", "Computational Materials", "VASP", 
 license = {text = "MIT"}
 requires-python = ">=3.9, <3.13"
 dependencies = [
-    "ase>=3.24.0",
-    "numpy>=1.26.4",
-    "pydantic_ai>=0.8.1",
-    "pymatgen>=2024.10.3",
-    "pymatgen-analysis-defects>=2025.9.26",
-    "mp-api>=0.45.13",
-    "dotenv>=0.9.9",
-    "colorama>=0.4.6",
-    "tabulate>=0.9.0",
-    "bullet>=2.2.0",
-    "yaspin>=3.3.0",
-    "icet>=3.2",
+    "ase",
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "pydantic_ai",
+    "pymatgen",
+    "pymatgen-analysis-defects",
+    "mp-api",
+    "dotenv",
+    "colorama",
+    "tabulate",
+    "bullet",
+    "yaspin",
+    "icet",
+    "sevenn",
 ]
 
 [tool.setuptools.package-data]

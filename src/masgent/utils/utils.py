@@ -2,11 +2,23 @@
 
 import os, sys, datetime, time
 import tabulate
+import numpy as np
+from scipy.optimize import curve_fit
 from pathlib import Path
 from colorama import Fore, Style
 from mp_api.client import MPRester
 from openai import OpenAI
 from importlib.metadata import version, PackageNotFoundError
+
+def eos_func(volume, a, b, c, d):
+    energy = a + b * volume**(-2/3) + c * volume**(-4/3) + d * volume**(-2)
+    return energy
+
+def fit_eos(volumes, energies):
+    volumes_fit = np.linspace(min(volumes) * 0.99, max(volumes) * 1.01, 100)
+    popt, pcov = curve_fit(eos_func, volumes, energies)
+    energies_fit = eos_func(volumes_fit, *popt)
+    return volumes_fit, energies_fit
 
 def list_files_in_dir(dir):
     '''List all files in a directory and its subdirectories.'''

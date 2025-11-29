@@ -278,7 +278,7 @@ def command_2():
         while True:
             clear_and_print_entry_message()
             choices = [
-                '(To be implemented)',
+                '2.1 SenvenNet',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()
@@ -296,8 +296,8 @@ def command_2():
             elif user_input.startswith('Exit'):
                 color_print('\nExiting Masgent... Goodbye!\n', 'green')
                 sys.exit(0)
-            elif user_input.startswith('(To be implemented)'):
-                print('This feature is under development. Stay tuned!')
+            elif user_input.startswith('2.1'):
+                run_command('2.1')
             else:
                 continue
 

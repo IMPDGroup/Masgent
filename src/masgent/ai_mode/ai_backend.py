@@ -159,9 +159,11 @@ async def ai_mode(agent):
         while True:
             user_input = color_input('\nAsk anything, or type "back" to return, "new" to start a new session > ', 'yellow').strip()
 
+
             if not user_input:
                 continue
             
+
             if user_input.lower() in {'new'}:
                 start_new_session()
                 os.system('cls' if os.name == 'nt' else 'clear')
@@ -170,7 +172,8 @@ async def ai_mode(agent):
                 return
             else:
                 try:
-                    history = await chat_stream(agent, user_input, history)
+                    wrapped_input = f'Request/Confirmation: {user_input} (If this is a Request: ALWAYS output a workflow plan with choosen tools and required parameters FIRST and ask for confirmation; if this is a Confirmation: ignore the instruction above.)'
+                    history = await chat_stream(agent, wrapped_input, history)
                     # color_print(f'[Debug] Message history updated. Total messages: {len(history)}.\n', 'green')
                 except Exception as e:
                     color_print(f'[Error]: {e}', 'red')

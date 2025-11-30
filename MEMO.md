@@ -68,11 +68,11 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
       ```
     - Reset the virtual environment by uninstalling all packages
       ```bash
-      pip freeze | xargs pip uninstall -y
+      pip3 freeze | xargs pip uninstall -y
       # Or
-      pip freeze --exclude-editable | xargs pip uninstall -y
+      pip3 freeze --exclude-editable | xargs pip uninstall -y
       # Or
-      pip freeze | cut -d "@" -f1 | xargs pip uninstall -y
+      pip3 freeze | cut -d "@" -f1 | xargs pip uninstall -y
       ```
 
     - Deactivate the virtual environment:

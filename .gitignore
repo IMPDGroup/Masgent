@@ -1,6 +1,7 @@
 # Custom Python.gitignore file
 masgent_projects/
 test*
+venv*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

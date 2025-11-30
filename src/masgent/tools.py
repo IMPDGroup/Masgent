@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for plotting
 from typing import Literal, Optional, List, Dict, Any
 from contextlib import redirect_stdout
 from pathlib import Path

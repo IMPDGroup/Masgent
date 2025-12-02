@@ -209,6 +209,8 @@ def command_1_3():
                 '1.3.1 Convergence testing (ENCUT, KPOINTS)',
                 '1.3.2 Equation of State (EOS)',
                 '1.3.3 Elastic constants calculations',
+                '1.3.4 Ab-initio Molecular Dynamics (AIMD)',
+                '1.3.5 Nudged Elastic Band (NEB) calculations',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()
@@ -232,6 +234,10 @@ def command_1_3():
                 run_command('1.3.2')
             elif user_input.startswith('1.3.3'):
                 run_command('1.3.3')
+            elif user_input.startswith('1.3.4'):
+                run_command('1.3.4')
+            elif user_input.startswith('1.3.5'):
+                run_command('1.3.5')
             else:
                 continue
 

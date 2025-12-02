@@ -894,6 +894,105 @@ class GenerateVaspWorkflowOfElasticConstants(BaseModel):
 
         return self
     
+class GenerateVaspWorkflowOfAimd(BaseModel):
+    '''
+    Generate VASP input files and submit bash script for workflow of ab initio molecular dynamics (AIMD) simulations based on given POSCAR
+    '''
+
+    poscar_path: str = Field(
+        os.path.join(os.environ.get('MASGENT_SESSION_RUNS_DIR', ''), 'POSCAR'),
+        description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
+    )
+
+    temperature: int = Field(
+        1000,
+        description='Temperature in Kelvin for AIMD simulations. Defaults to 1000 K if not provided.'
+    )
+
+    md_steps: int = Field(
+        1000,
+        description='Number of molecular dynamics steps. Defaults to 1000 if not provided.'
+    )
+
+    md_timestep: float = Field(
+        2.0,
+        description='Time step in femtoseconds for AIMD simulations. Defaults to 2.0 fs if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure POSCAR exists
+        if not os.path.isfile(self.poscar_path):
+            raise ValueError(f'POSCAR file not found: {self.poscar_path}')
+        
+        # ensure the poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid POSCAR file: {self.poscar_path}')
+        
+        # validate temperature
+        if self.temperature < 0:
+            raise ValueError('Temperature must be a non-negative number.')
+        
+        # validate md_steps
+        if self.md_steps < 1:
+            raise ValueError('Number of molecular dynamics steps (md_steps) must be at least 1.')
+        
+        # validate md_timestep
+        if self.md_timestep <= 0:
+            raise ValueError('Molecular dynamics time step (md_timestep) must be a positive number.')
+
+        return self
+    
+class GenerateVaspWorkflowOfNeb(BaseModel):
+    '''
+    Schema for generating VASP input files and submit bash script for workflow of nudged elastic band (NEB) calculations based on given initial and final POSCAR files.
+    '''
+    
+    initial_poscar_path: str = Field(
+        ...,
+        description='Path to the initial POSCAR file. Must exist.'
+    )
+
+    final_poscar_path: str = Field(
+        ...,
+        description='Path to the final POSCAR file. Must exist.'
+    )
+
+    num_images: int = Field(
+        5,
+        description='Number of intermediate images for NEB calculation. Defaults to 5 if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure initial POSCAR exists
+        if not os.path.isfile(self.initial_poscar_path):
+            raise ValueError(f'Initial POSCAR file not found: {self.initial_poscar_path}')
+        
+        # ensure the initial poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.initial_poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid initial POSCAR file: {self.initial_poscar_path}')
+        
+        # ensure final POSCAR exists
+        if not os.path.isfile(self.final_poscar_path):
+            raise ValueError(f'Final POSCAR file not found: {self.final_poscar_path}')
+        
+        # ensure the final poscar file is valid POSCAR
+        try:
+            _ = Structure.from_file(self.final_poscar_path)
+        except Exception as e:
+            raise ValueError(f'Invalid final POSCAR file: {self.final_poscar_path}')
+        
+        # validate num_images
+        if self.num_images < 1:
+            raise ValueError('Number of intermediate images (num_images) must be at least 1.')
+
+        return self
+    
 class RunSimulationUsingMlps(BaseModel):
     '''
     Schema for performing fast simulation using machine learning potentials (MLPs) based on given POSCAR.
@@ -925,8 +1024,8 @@ class RunSimulationUsingMlps(BaseModel):
         description='Maximum number of simulation steps. Defaults to 500 if not provided.'
     )
 
-    temperature: float = Field(
-        1000.0,
+    temperature: int = Field(
+        1000,
         description='Temperature in Kelvin for molecular dynamics simulations. Defaults to 1000 K if not provided.'
     )
 

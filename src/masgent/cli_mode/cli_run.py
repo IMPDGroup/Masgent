@@ -1307,6 +1307,137 @@ def command_1_3_3():
     color_print(result['message'], 'green')
     time.sleep(1)
 
+@register('1.3.4', 'Generate VASP workflow for ab initio molecular dynamics (AIMD) simulations based on given POSCAR.')
+def command_1_3_4():
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+
+    try:
+        while True:
+            temperature_str = color_input('\nEnter the simulation temperature in K (e.g., "1000"): ', 'yellow').strip()
+
+            if not temperature_str:
+                continue
+
+            try:
+                temperature = int(temperature_str)
+                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperature=temperature)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid temperature: {temperature_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            md_steps_str = color_input('\nEnter the number of MD steps (e.g., "1000"): ', 'yellow').strip()
+
+            if not md_steps_str:
+                continue
+
+            try:
+                md_steps = int(md_steps_str)
+                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperature=temperature, md_steps=md_steps)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid MD steps: {md_steps_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            md_timestep_str = color_input('\nEnter the MD timestep in fs (e.g., "2.0"): ', 'yellow').strip()
+
+            if not md_timestep_str:
+                continue
+
+            try:
+                md_timestep = float(md_timestep_str)
+                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperature=temperature, md_steps=md_steps, md_timestep=md_timestep)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid MD timestep: {md_timestep_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    result = tools.generate_vasp_workflow_of_aimd(poscar_path=poscar_path, temperature=temperature, md_steps=md_steps, md_timestep=md_timestep)
+    color_print(result['message'], 'green')
+    time.sleep(1)
+
+@register('1.3.5', 'Generate VASP workflow for Nudged Elastic Band (NEB) calculations based on given initial and final POSCARs.')
+def command_1_3_5():
+    try:
+        while True:
+            initial_poscar_path = color_input('\nEnter the path to the initial POSCAR file: ', 'yellow').strip()
+            
+            if not initial_poscar_path:
+                continue
+
+            try:
+                schemas.CheckPoscar(poscar_path=initial_poscar_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid POSCAR: {initial_poscar_path}, please double check and try again.\n', 'red')
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            final_poscar_path = color_input('\nEnter the path to the final POSCAR file: ', 'yellow').strip()
+            
+            if not final_poscar_path:
+                continue
+
+            try:
+                schemas.CheckPoscar(poscar_path=final_poscar_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid POSCAR: {final_poscar_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            num_images_str = color_input('\nEnter the number of intermediate images (e.g., "5"): ', 'yellow').strip()
+
+            if not num_images_str:
+                continue
+
+            try:
+                num_images = int(num_images_str)
+                schemas.GenerateVaspWorkflowOfNeb(initial_poscar_path=initial_poscar_path, final_poscar_path=final_poscar_path, num_images=num_images)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid number of images: {num_images_str}, please double check and try again.\n', 'red')
+    
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    result = tools.generate_vasp_workflow_of_neb(initial_poscar_path=initial_poscar_path, final_poscar_path=final_poscar_path, num_images=num_images)
+    color_print(result['message'], 'green')
+    time.sleep(1)
+
 def call_mlps(mlps_type: str):
     try:
         while True:
@@ -1411,11 +1542,11 @@ def call_mlps(mlps_type: str):
                 temperature_str = color_input('\nEnter the simulation temperature in K (default: 1000 K): ', 'yellow').strip()
 
                 if not temperature_str:
-                    temperature = 1000.0
+                    temperature = 1000
                     break
 
                 try:
-                    temperature = float(temperature_str)
+                    temperature = int(temperature_str)
                     schemas.RunSimulationUsingMlps(poscar_path=poscar_path, temperature=temperature)
                     break
                 except Exception:

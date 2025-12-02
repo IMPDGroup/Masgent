@@ -38,9 +38,8 @@ Masgent: Materials Simulation Agent
       - 1.3.1 Convergence testing (ENCUT, KPOINTS)
       - 1.3.2 Equation of State (EOS)
       - 1.3.3 Elastic constants calculations
-      - 1.3.4 (Planned) Ab-initio Molecular Dynamics (AIMD)
-      - 1.3.5 (Planned) Nudged Elastic Band (NEB) calculations
-      - 1.3.6 (Planned) Charge density difference calculations
+      - 1.3.4 Ab-initio Molecular Dynamics (AIMD)
+      - 1.3.5 Nudged Elastic Band (NEB) calculations
   
   - 1.4 (Planned) VASP Output Analysis
 

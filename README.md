@@ -2,14 +2,8 @@
 Masgent: Materials Simulation Agent
 
 ## Usage Demo
-- Installation Guide:  
-<div align=left><img src='./res/installation.gif' alt='Installation Guide' width='800'/></div>
-
 - Basic Usage:  
 <div align=left><img src='./res/basic.gif' alt='Basic Usage' width='800'/></div>
-
-- Machine Learning Potentials (MLPs) Simulations:  
-<div align=left><img src='./res/mlps.gif' alt='MLPs Simulations' width='800'/></div>
 
 - AI Agent:  
 <div align=left><img src='./res/ai.gif' alt='AI Agent' width='800'/></div>

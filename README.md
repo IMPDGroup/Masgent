@@ -38,6 +38,9 @@ Masgent: Materials Simulation Agent
       - 1.3.1 Convergence testing (ENCUT, KPOINTS)
       - 1.3.2 Equation of State (EOS)
       - 1.3.3 Elastic constants calculations
+      - 1.3.4 (Planned) Ab-initio Molecular Dynamics (AIMD)
+      - 1.3.5 (Planned) Nudged Elastic Band (NEB) calculations
+      - 1.3.6 (Planned) Charge density difference calculations
   
   - 1.4 (Planned) VASP Output Analysis
 
@@ -52,7 +55,12 @@ Masgent: Materials Simulation Agent
     - Elastic Constants Calculation
     - Molecular Dynamics Simulation (NVT)
 
-3. (Planned) Machine Learning Model Training & Evaluation
+3. Machine Learning for Materials Science
+  - 3.1 (Planned) Data Preparation
+  - 3.2 (Planned) Model Design
+    - 3.2.1 (Planned) Artificial Neural Networks (ANNs)
+    - 3.2.2 (Planned) Bayesian Neural Networks (BNNs)
+  - 3.3 (Planned) Model Training & Evaluation
 
 ## Installation
 1. Requirements:

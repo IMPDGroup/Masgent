@@ -243,7 +243,7 @@ def generate_vasp_poscar(formula: str) -> dict:
 
 @with_metadata(schemas.ToolMetadata(
     name='Generate VASP Inputs (INCAR, KPOINTS, POTCAR, POSCAR)',
-    description='Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets (MPRelaxSet, MPStaticSet, MPNonSCFSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet, NEBSet, MVLElasticSet).',
+    description='Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets (MPRelaxSet, MPStaticSet, MPNonSCFSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet, MVLElasticSet).',
     requires=['vasp_input_sets'],
     optional=['poscar_path', 'only_incar'],
     defaults={
@@ -280,9 +280,8 @@ def generate_vasp_inputs_from_poscar(
         'MPNonSCFSet': MPNonSCFSet,
         'MPScanRelaxSet': MPScanRelaxSet,
         'MPScanStaticSet': MPScanStaticSet,
-        'MPMDSet': MPMDSet,
-        'NEBSet': NEBSet,
         'MVLElasticSet': MVLElasticSet,
+        'MPMDSet': MPMDSet,
     }
     vis_class = VIS_MAP[vasp_input_sets]
 

@@ -3,22 +3,16 @@ Masgent: Materials Simulation Agent
 
 ## Usage Demo
 - Installation Guide:  
-https://github.com/user-attachments/assets/8ee0d146-15ca-47e1-9d5f-14f4b943ae77
+<div align=left><img src='./res/installation.gif' alt='Installation Guide' width='800'/></div>
 
 - Basic Usage:  
-<video width="600" controls>
-  <source src="[https://github.com/user-attachments/assets/8ee0d146-15ca-47e1-9d5f-14f4b943ae77](https://github.com/user-attachments/assets/8ee0d146-15ca-47e1-9d5f-14f4b943ae77)" type="video/mp4">
-</video>
+<div align=left><img src='./res/basic.gif' alt='Basic Usage' width='800'/></div>
 
 - Machine Learning Potentials (MLPs) Simulations:  
-<video width="600" controls>
-  <source src="https://raw.githubusercontent.com/aguang5241/Masgent/main/res/mlps.mp4" type="video/mp4">
-</video>
+<div align=left><img src='./res/mlps.gif' alt='MLPs Simulations' width='800'/></div>
 
 - AI Agent:  
-<video width="600" controls>
-  <source src="https://raw.githubusercontent.com/aguang5241/Masgent/main/res/ai.mp4" type="video/mp4">
-</video>
+<div align=left><img src='./res/ai.gif' alt='AI Agent' width='800'/></div>
 
 ## Features
 - AI agent (Pydantic AI + OpenAI)

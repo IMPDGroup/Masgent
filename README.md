@@ -1,6 +1,27 @@
 # Masgent
 Masgent: Materials Simulation Agent
 
+## Usage Demo
+- Installation Guide:  
+<video width="600" controls>
+  <source src="res/installation.mp4" type="video/mp4">
+</video>
+
+- Basic Usage:  
+<video width="600" controls>
+  <source src="res/basic.mp4" type="video/mp4">
+</video>
+
+- Machine Learning Potentials (MLPs) Simulations:  
+<video width="600" controls>
+  <source src="res/mlps.mp4" type="video/mp4">
+</video>
+
+- AI Agent:  
+<video width="600" controls>
+  <source src="res/ai.mp4" type="video/mp4">
+</video>
+
 ## Features
 - AI agent (Pydantic AI + OpenAI)
 - Materials Project access

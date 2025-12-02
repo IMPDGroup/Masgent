@@ -3,9 +3,7 @@ Masgent: Materials Simulation Agent
 
 ## Usage Demo
 - Installation Guide:  
-<video width="600" controls>
-  <source src="https://raw.githubusercontent.com/aguang5241/Masgent/main/res/installation.mp4" type="video/mp4">
-</video>
+https://github.com/user-attachments/assets/600128cd-5eae-4c13-ac80-9763572d705a
 
 - Basic Usage:  
 <video width="600" controls>

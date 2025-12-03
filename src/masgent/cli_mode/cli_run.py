@@ -436,7 +436,7 @@ def command_interstitial():
         return
 
     print('')
-    with yaspin(Spinners.dots, text='Generating SQS... See details in the log file.', color='cyan') as sp:
+    with yaspin(Spinners.dots, text='Generating interstitial defects... See details in the log file.', color='cyan') as sp:
         result = tools.generate_vasp_poscar_with_interstitial_defects(poscar_path=poscar_path, defect_element=defect_element)
     color_print(result['message'], 'green')
     time.sleep(1)

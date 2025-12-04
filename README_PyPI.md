@@ -1,6 +1,9 @@
 # Masgent
 Masgent: Materials Simulation Agent
 
+## Overview
+Masgent is a materials simulation AI agent that streamlines DFT workflows and analysis, fast MLP-based simulations, and simple ML modeling for materials science. With automated tools for structure handling, VASP setup, and rapid property prediction, Masgent simplifies complex simulation workflows and boosts productivity for both researchers and students.
+
 ## Features
 1. Density Functional Theory (DFT) Simulations
   - 1.1 Structure Preparation & Manipulation
@@ -53,16 +56,33 @@ Masgent: Materials Simulation Agent
 ## Installation
 1. Requirements:
    - Python >= 3.11, < 3.14
-2. Install via pip:
+2. Optional requirements:
+   - For AI functionalities: get your OpenAI API key from [platform.openai.com](https://platform.openai.com/account/api-keys)
+   - For Materials Project access: get your Materials Project API key from [materialsproject.org](https://next-gen.materialsproject.org/api)
+3. Install via pip:
   ```bash
-  pip install masgent
+  pip install -U masgent
   ```
 
 ## Usage
-1. After installation, run the following command to start the Masgent:
+- After installation, run the following command to start the Masgent:
   ```bash
   masgent
   ```
-2. Optional preparation:
-  - For AI functionalities, obtain your OpenAI API key from [platform.openai.com](https://platform.openai.com/account/api-keys).
-  - For Materials Project access, obtain your API key from [materialsproject.org](https://next-gen.materialsproject.org/api).
+
+## Issues and Suggestions
+If you encounter any issues or have suggestions for improvements, please open an issue on our [GitHub issues](https://github.com/aguang5241/masgent/issues).
+
+## Cite Us
+If you use Masgent in your research, please cite the following reference:
+```
+@article{
+  title={Masgent: A Materials Simulation Agent},
+  journal={},
+  volume={},
+  pages={},
+  year={},
+  issn={},
+  doi={},
+}
+```

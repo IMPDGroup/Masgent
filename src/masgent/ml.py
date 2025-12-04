@@ -1,12 +1,12 @@
 
 import numpy as np
 import pandas as pd
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.discriminant_analysis import StandardScaler
 from tqdm import tqdm
+from sklearn.discriminant_analysis import StandardScaler
 import torch
 import torch.nn as nn
 from torch.nn.functional import mse_loss
+from torch.utils.data import DataLoader, TensorDataset
 
 # Conditional Variational Autoencoder (CVAE) for data augmentation
 class CVAE(nn.Module):

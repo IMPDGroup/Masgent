@@ -4,7 +4,6 @@
 import os, warnings, random, shutil, re, joblib
 warnings.filterwarnings('ignore')
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -12,7 +11,6 @@ import torch
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for plotting
 from typing import Literal, List
-from tqdm import tqdm
 from pathlib import Path
 from dotenv import load_dotenv
 from mp_api.client import MPRester
@@ -22,7 +20,6 @@ from orb_models.forcefield import pretrained
 from orb_models.forcefield.calculator import ORBCalculator
 from mattersim.forcefield import MatterSimCalculator
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 from ase import units
 from ase.build import surface
 from ase.filters import FrechetCellFilter

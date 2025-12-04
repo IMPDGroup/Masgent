@@ -1,6 +1,21 @@
 # Masgent
 Masgent: Materials Simulation Agent
 
+## Features
+- AI agent (Pydantic AI + OpenAI)
+- Materials Project access
+- Distributed as a Python package
+- Robust system prompts to guide AI behavior
+- Strict input validation (Pydantic schemas)
+- API key management and validation
+- Interactive command selection menu (Bullet)
+- Color-coded terminal interface (Colorama)
+- AI standby for instant assistance
+- Smart memory management
+- Detailed user guidance
+- Spinner for AI response waiting time (Yaspin)
+- Automated file handling and management
+
 ## Local Debugging and Testing
 ```bash
 # Local install the package

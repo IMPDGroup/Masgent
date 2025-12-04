@@ -1,6 +1,9 @@
 # !/usr/bin/env python3
 
+# Do not show warnings
 import os, warnings, random, shutil, re
+warnings.filterwarnings('ignore')
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -55,9 +58,6 @@ from masgent.utils.utils import (
     fit_eos,
     create_deformation_matrices,
     )
-
-# Do not show warnings
-warnings.filterwarnings('ignore')
 
 # Track whether Materials Project key has been checked during this process
 _mp_key_checked = False

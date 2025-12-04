@@ -1,24 +1,7 @@
 # Masgent
 Masgent: Materials Simulation Agent
 
-## Usage Demo
-
 ## Features
-- AI agent (Pydantic AI + OpenAI)
-- Materials Project access
-- Distributed as a Python package
-- Robust system prompts to guide AI behavior
-- Strict input validation (Pydantic schemas)
-- API key management and validation
-- Interactive command selection menu (Bullet)
-- Color-coded terminal interface (Colorama)
-- AI standby for instant assistance
-- Smart memory management
-- Detailed user guidance
-- Spinner for AI response waiting time (Yaspin)
-- Automated file handling and management
-
-## Functionalities
 1. Density Functional Theory (DFT) Simulations
   - 1.1 Structure Preparation & Manipulation
     - 1.1.1 Generate POSCAR from chemical formula
@@ -36,14 +19,19 @@ Masgent: Materials Simulation Agent
     - 1.2.3 Generate KPOINTS with specified accuracy
     - 1.2.4 Generate HPC job submission script
   
-  - 1.3 Standard VASP Workflows
-    - 1.3.1 Convergence testing (ENCUT, KPOINTS)
+  - 1.3 Standard VASP Workflows Preparation
+    - 1.3.1 Convergence test (ENCUT, KPOINTS)
     - 1.3.2 Equation of State (EOS)
     - 1.3.3 Elastic constants calculations
     - 1.3.4 Ab-initio Molecular Dynamics (AIMD)
     - 1.3.5 Nudged Elastic Band (NEB) calculations
   
   - 1.4 (Planned) Workflow Output Analysis
+    - 1.4.1 (Planned) Convergence test analysis
+    - 1.4.2 (Planned) Equation of State (EOS) analysis
+    - 1.4.3 (Planned) Elastic constants analysis 
+    - 1.4.4 (Planned) Ab-initio Molecular Dynamics (AIMD) analysis
+    - 1.4.5 (Planned) Nudged Elastic Band (NEB) analysis
 
 2. Fast Simulations Using Machine Learning Potentials (MLPs)
   - Supported MLPs:
@@ -57,7 +45,7 @@ Masgent: Materials Simulation Agent
     - Elastic Constants Calculation
     - Molecular Dynamics Simulation (NVT)
 
-3. Simple Machine Learning for Materials Science
+3. (Planned) Simple Machine Learning for Materials Science
   - 3.1 (Planned) Data Preparation & Feature Engineering
   - 3.2 (Planned) Model Design & Hyperparameter Tuning
   - 3.3 (Planned) Model Training & Evaluation

@@ -105,4 +105,4 @@ If you use Masgent in your research, please cite the following reference:
   ```
 
 ## 🙏 Acknowledgements
-Masgent builds on the open-source materials ecosystem, including **ASE**, **Pymatgen**, and modern **Machine Learning Potentials**. We thank the developers of these tools for making advanced materials simulation possible.
+Masgent builds on the open-source materials ecosystem, including **ASE**, **Pymatgen**, **Icet**, and modern **Machine Learning Potentials**. We thank the developers of these tools for making advanced materials simulation possible.

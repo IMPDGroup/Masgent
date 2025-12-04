@@ -158,7 +158,9 @@ done
 
 # 2. Submit every job
 for d in */; do
-    sbatch "${d}/submit.sh"
+    cd "${d}"
+    sbatch submit.sh
+    cd ..
 done
 '''
     return scripts
@@ -324,7 +326,7 @@ Masgent - Available Commands and Functions:
     1.2.2 Generate INCAR templates (relaxation, static, MD, etc.)
     1.2.3 Generate KPOINTS with specified accuracy
     1.2.4 Generate HPC job submission script
-  1.3 Standard VASP Workflows
+  1.3 Standard VASP Workflows Preparation
     1.3.1 Convergence testing (ENCUT, KPOINTS)
     1.3.2 Equation of State (EOS)
     1.3.3 Elastic constants calculations
@@ -344,6 +346,9 @@ Masgent - Available Commands and Functions:
     - Molecular Dynamics Simulation (NVT)
 3. Simple Machine Learning for Materials Science
   3.1 (Planned) Data Preparation & Feature Engineering
+    3.1.1 Feature analysis and visualization
+    3.1.2 Dimensionality reduction (if too many features)
+    3.1.3 Data augmentation (if limited data)
   3.2 (Planned) Model Design & Hyperparameter Tuning
   3.3 (Planned) Model Training & Evaluation
 '''

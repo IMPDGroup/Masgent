@@ -228,6 +228,9 @@ def main():
             tools.generate_vasp_workflow_of_aimd,
             tools.generate_vasp_workflow_of_neb,
             tools.run_simulation_using_mlps,
+            tools.analyze_features_for_machine_learning,
+            tools.reduce_dimensions_for_machine_learning,
+            tools.augment_data_for_machine_learning,
         ],
         history_processors=[keep_recent_messages],
         )

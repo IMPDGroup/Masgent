@@ -1,15 +1,18 @@
 # !/usr/bin/env python3
 
 # Do not show warnings
-import os, warnings, random, shutil, re
+import os, warnings, random, shutil, re, joblib
 warnings.filterwarnings('ignore')
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import torch
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for plotting
 from typing import Literal, List
+from tqdm import tqdm
 from pathlib import Path
 from dotenv import load_dotenv
 from mp_api.client import MPRester
@@ -18,6 +21,8 @@ from chgnet.model.dynamics import CHGNetCalculator
 from orb_models.forcefield import pretrained
 from orb_models.forcefield.calculator import ORBCalculator
 from mattersim.forcefield import MatterSimCalculator
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from ase import units
 from ase.build import surface
 from ase.filters import FrechetCellFilter
@@ -49,6 +54,7 @@ from pymatgen.io.vasp.sets import (
 
 from masgent import schemas
 from masgent.utils.interface_maker import run_interface_maker
+from masgent.ml import run_cvae_augmentation
 from masgent.utils.utils import (
     write_comments,
     ask_for_mp_api_key,
@@ -163,8 +169,6 @@ def generate_vasp_poscar(formula: str) -> dict:
     '''
     Generate VASP POSCAR file from Materials Project database.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar with input: {input}', 'green')
-    
     try:
         schemas.GenerateVaspPoscarSchema(formula=formula)
     except Exception as e:
@@ -187,7 +191,6 @@ def generate_vasp_poscar(formula: str) -> dict:
             if 'MP_API_KEY' not in os.environ:
                 ask_for_mp_api_key()
             else:
-                # color_print('[Info] Materials Project API key found in environment.\n', 'green')
                 validate_mp_api_key(os.environ['MP_API_KEY'])
             _mp_key_checked = True
         
@@ -260,8 +263,6 @@ def generate_vasp_inputs_from_poscar(
     '''
     Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_inputs_from_poscar with input: {input}', 'green')
-    
     try:
         schemas.GenerateVaspInputsFromPoscar(
             poscar_path=poscar_path,
@@ -358,8 +359,6 @@ def generate_vasp_inputs_hpc_slurm_script(
     '''
     Generate HPC Slurm job submission script for VASP calculations.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_inputs_hpc_slurm_script with input: {input}', 'green')
-    
     try:
         schemas.GenerateVaspInputsHpcSlurmScript(
             partition=partition,
@@ -422,8 +421,6 @@ def convert_structure_format(
     '''
     Convert structure files between different formats (CIF, POSCAR, XYZ).
     '''
-    # color_print(f'\n[Debug: Function Calling] convert_structure_format with input: {input}', 'green')
-    
     try:
         schemas.ConvertStructureFormatSchema(
             input_path=input_path,
@@ -484,8 +481,6 @@ def convert_poscar_coordinates(
     '''
     Convert POSCAR between direct and cartesian coordinates.
     '''
-    # color_print(f'\n[Debug: Function Calling] convert_poscar_coordinates with input: {input}', 'green')
-    
     try:
         schemas.ConvertPoscarCoordinatesSchema(
             poscar_path=poscar_path,
@@ -537,8 +532,6 @@ def customize_vasp_kpoints_with_accuracy(
     '''
     Customize VASP KPOINTS from POSCAR with specified accuracy level.
     '''
-    # color_print(f'\n[Debug: Function Calling] customize_vasp_kpoints_with_accuracy with input: {input}', 'green')
-    
     try:
         schemas.CustomizeVaspKpointsWithAccuracy(
             poscar_path=poscar_path,
@@ -594,8 +587,6 @@ def generate_vasp_poscar_with_vacancy_defects(
     '''
     Generate VASP POSCAR with vacancy defects.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_with_vacancy_defects with input: {input}', 'green')
-    
     try:
         schemas.GenerateVaspPoscarWithVacancyDefects(
             poscar_path=poscar_path,
@@ -659,8 +650,6 @@ def generate_vasp_poscar_with_substitution_defects(
     '''
     Generate VASP POSCAR with substitution defects.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_with_substitution_defects with input: {input}', 'green')
-
     try:
         schemas.GenerateVaspPoscarWithSubstitutionDefects(
             poscar_path=poscar_path,
@@ -723,8 +712,6 @@ def generate_vasp_poscar_with_interstitial_defects(
     '''
     Generate VASP POSCAR with interstitial (Voronoi) defects.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_with_interstitial_defects with input: {input}', 'green')
-
     try:
         schemas.GenerateVaspPoscarWithInterstitialDefects(
             poscar_path=poscar_path,
@@ -793,8 +780,6 @@ def generate_supercell_from_poscar(
     '''
     Generate supercell from POSCAR based on user-defined 3x3 scaling matrix.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_supercell_from_poscar with input: {input}', 'green')
-    
     try:
         schemas.GenerateSupercellFromPoscar(
             poscar_path=poscar_path,
@@ -860,8 +845,6 @@ def generate_sqs_from_poscar(
     '''
     Generate Special Quasirandom Structures (SQS) using icet.
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_sqs_from_poscar with input: {input}', 'green')
-
     try:
         schemas.GenerateSqsFromPoscar(
             poscar_path=poscar_path,
@@ -983,8 +966,6 @@ def generate_surface_slab_from_poscar(
     '''
     Generate VASP POSCAR for surface slab from bulk POSCAR based on Miller indices, vacuum thickness, and slab layers
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_poscar_for_surface_slab with input: {input}', 'green')
-    
     try:
         schemas.GenerateSurfaceSlabFromPoscar(
             poscar_path=poscar_path,
@@ -1139,8 +1120,6 @@ def generate_vasp_workflow_of_convergence_tests(
     '''
     Generate VASP input files and submit bash script for workflow of convergence tests for k-points and energy cutoff based on given POSCAR
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_convergence_tests with input: {input}', 'green')
-    
     try:
         schemas.GenerateVaspWorkflowOfConvergenceTests(
             poscar_path=poscar_path,
@@ -1252,8 +1231,6 @@ def generate_vasp_workflow_of_eos(
     '''
     Generate VASP input files and submit bash script for workflow of equation of state (EOS) calculations based on given POSCAR
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_eos with input: {input}', 'green')
-    
     try:
         schemas.GenerateVaspWorkflowOfEos(
             poscar_path=poscar_path,
@@ -1324,8 +1301,6 @@ def generate_vasp_workflow_of_elastic_constants(
     '''
     Generate VASP input files and submit bash script for workflow of elastic constants calculations based on given POSCAR
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_elastic_constants with input: {input}', 'green')
-    
     try:
         schemas.GenerateVaspWorkflowOfElasticConstants(poscar_path=poscar_path)
     except Exception as e:
@@ -1406,8 +1381,6 @@ def generate_vasp_workflow_of_aimd(
     '''
     Generate VASP input files and submit bash script for workflow of ab initio molecular dynamics (AIMD) simulations based on given POSCAR
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_aimd with input: {input}', 'green')
-
     try:
         schemas.GenerateVaspWorkflowOfAimd(
             poscar_path=poscar_path,
@@ -1477,8 +1450,6 @@ def generate_vasp_workflow_of_neb(
     '''
     Generate VASP input files and submit bash script for workflow of nudged elastic band (NEB) calculations based on given initial and final POSCARs
     '''
-    # color_print(f'\n[Debug: Function Calling] generate_vasp_workflow_of_neb with input: {input}', 'green')
-
     try:
         schemas.GenerateVaspWorkflowOfNeb(
             initial_poscar_path=initial_poscar_path,
@@ -1584,8 +1555,6 @@ def run_simulation_using_mlps(
     Run simulation using machine learning potentials (MLPs) based on given POSCAR.
     Supported tasks include: single point calculation, equation of state (EOS), elastic constants, and molecular dynamics (MD) simulations.
     '''
-    # color_print(f'\n[Debug: Function Calling] run_simulation_using_mlps with input: {input}', 'green')
-
     def fit_and_plot_eos(volumes, energies, mlps_type, task_dir):
         volumes_fit, energies_fit = fit_eos(volumes, energies)
         eos_fit_df = pd.DataFrame({'Volume[Å³]': volumes_fit, 'Energy[eV/atom]': energies_fit})
@@ -1839,4 +1808,198 @@ def run_simulation_using_mlps(
         return {
             'status': 'error',
             'message': f'Simulation using MLPs failed: {str(e)}'
+        }
+
+@with_metadata(schemas.ToolMetadata(
+    name='Analyze features for machine learning',
+    description='Analyze features (correlation matrix) for machine learning based on given input and output datasets',
+    requires=['input_data_path', 'output_data_path'],
+    optional=[],
+    defaults={},
+    prereqs=[],
+))
+def analyze_features_for_machine_learning(
+    input_data_path: str,
+    output_data_path: str,
+) -> dict:
+    '''
+    Analyze features (correlation matrix) for machine learning based on given input and output datasets
+    '''
+    try:
+        schemas.AnalyzeFeaturesForMachineLearning(
+            input_data_path=input_data_path,
+            output_data_path=output_data_path,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
+    
+    try:
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
+
+        machine_learning_dir = os.path.join(runs_dir, 'machine_learning')
+        os.makedirs(machine_learning_dir, exist_ok=True)
+
+        ml_feature_analysis_dir = os.path.join(machine_learning_dir, 'ml_feature_analysis')
+        os.makedirs(ml_feature_analysis_dir, exist_ok=True)
+
+        input_df = pd.read_csv(input_data_path)
+        output_df = pd.read_csv(output_data_path)
+        # Save the input and output data in machine learning directory for reference
+        input_df.to_csv(os.path.join(machine_learning_dir, 'ml_input_data.csv'), index=False, float_format='%.8f')
+        output_df.to_csv(os.path.join(machine_learning_dir, 'ml_output_data.csv'), index=False, float_format='%.8f')
+
+        combined_df = pd.concat([input_df, output_df], axis=1)
+        corr_matrix = combined_df.corr()
+        corr_matrix.to_csv(os.path.join(ml_feature_analysis_dir, 'correlation_matrix.csv'), float_format='%.8f')
+        
+        sns.set_theme(font_scale=1.0, style='whitegrid')
+        matplotlib.rcParams['xtick.direction'] = 'in'
+        matplotlib.rcParams['ytick.direction'] = 'in'
+        fig = plt.figure(figsize=(13, 12), constrained_layout=True)
+        ax = plt.subplot()
+        sns.heatmap(
+            corr_matrix, 
+            annot=True, 
+            fmt='.2f',
+            cmap='coolwarm', 
+            center=0, 
+            cbar=False, 
+            ax=ax
+            )
+        ax.set_title('Feature Correlation Matrix')
+        plt.savefig(os.path.join(ml_feature_analysis_dir, 'correlation_matrix.png'), dpi=330)
+
+        return {
+            'status': 'success',
+            'message': f'Completed feature analysis for machine learning in {ml_feature_analysis_dir}.',
+            'ml_feature_analysis_dir': ml_feature_analysis_dir,
+            'correlation_matrix_csv_path': os.path.join(ml_feature_analysis_dir, 'correlation_matrix.csv'),
+            'correlation_matrix_png_path': os.path.join(ml_feature_analysis_dir, 'correlation_matrix.png'),
+            'input_data_path': os.path.join(machine_learning_dir, 'ml_input_data.csv'),
+            'output_data_path': os.path.join(machine_learning_dir, 'ml_output_data.csv'),
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Feature analysis for machine learning failed: {str(e)}'
+        }
+
+@with_metadata(schemas.ToolMetadata(
+    name='Reduce dimensions for machine learning',
+    description='Reduce dimensions for machine learning based on given input dataset using PCA method',
+    requires=['input_data_path'],
+    optional=['n_components'],
+    defaults={'n_components': 2},
+    prereqs=[],
+))
+def reduce_dimensions_for_machine_learning(
+    input_data_path: str,
+    n_components: int = 2,
+) -> dict:
+    '''
+    Reduce dimensions for machine learning based on given input dataset using PCA method
+    '''
+    try:
+        schemas.ReduceDimensionsForMachineLearning(
+            input_data_path=input_data_path,
+            n_components=n_components,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
+    
+    try:
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
+
+        machine_learning_dir = os.path.join(runs_dir, 'machine_learning')
+        os.makedirs(machine_learning_dir, exist_ok=True)
+
+        ml_dimension_reduction_dir = os.path.join(machine_learning_dir, 'ml_dimension_reduction')
+        os.makedirs(ml_dimension_reduction_dir, exist_ok=True)
+
+        input_df = pd.read_csv(input_data_path)
+        reducer = PCA(n_components=n_components)
+        joblib.dump(reducer, os.path.join(ml_dimension_reduction_dir, "pca_reducer.pkl"))
+        reduced_data = reducer.fit_transform(input_df.values)
+        reduced_df = pd.DataFrame(reduced_data, columns=[f'Component_{i+1}' for i in range(n_components)])
+        reduced_df.to_csv(os.path.join(ml_dimension_reduction_dir, 'ml_input_data_reduced.csv'), index=False, float_format='%.8f')
+
+        return {
+            'status': 'success',
+            'message': f'Completed dimension reduction for machine learning in {ml_dimension_reduction_dir}.',
+            'ml_dimension_reduction_dir': ml_dimension_reduction_dir,
+            'input_data_reduced_path': os.path.join(ml_dimension_reduction_dir, 'ml_input_data_reduced.csv'),
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Dimension reduction for machine learning failed: {str(e)}'
+        }
+
+@with_metadata(schemas.ToolMetadata(
+    name='Augment data for machine learning',
+    description='Augment data for machine learning based on given input and output datasets using VAE-based method',
+    requires=['input_data_path', 'output_data_path'],
+    optional=['num_augmentations', 'max_epochs', 'loss_threshold'],
+    defaults={'num_augmentations': 100},
+    prereqs=[],
+))
+def augment_data_for_machine_learning(
+    input_data_path: str,
+    output_data_path: str,
+    num_augmentations: int = 100,
+) -> dict:
+    '''
+    Augment data for machine learning by VAE-based method
+    '''
+    try:
+        schemas.AugmentDataForMachineLearning(
+            input_data_path=input_data_path,
+            output_data_path=output_data_path,
+            num_augmentations=num_augmentations,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
+    
+    try:
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
+
+        machine_learning_dir = os.path.join(runs_dir, 'machine_learning')
+        os.makedirs(machine_learning_dir, exist_ok=True)
+
+        ml_data_augmentation_dir = os.path.join(machine_learning_dir, 'ml_data_augmentation')
+        os.makedirs(ml_data_augmentation_dir, exist_ok=True)
+
+        input_df = pd.read_csv(input_data_path)
+        output_df = pd.read_csv(output_data_path)
+
+        # Run VAE for data augmentation
+        x_aug_df, y_aug_df = run_cvae_augmentation(input_df=input_df, output_df=output_df, num_aug=num_augmentations)
+        x_all_df = pd.concat([input_df, x_aug_df], ignore_index=True)
+        y_all_df = pd.concat([output_df, y_aug_df], ignore_index=True)
+        x_all_df.to_csv(os.path.join(ml_data_augmentation_dir, 'ml_input_data_augmented.csv'), index=False, float_format='%.8f')
+        y_all_df.to_csv(os.path.join(ml_data_augmentation_dir, 'ml_output_data_augmented.csv'), index=False, float_format='%.8f')
+
+        return {
+            'status': 'success',
+            'message': f'Completed data augmentation for machine learning in {ml_data_augmentation_dir}.',
+            'ml_data_augmentation_dir': ml_data_augmentation_dir,
+            'input_data_augmented_path': os.path.join(ml_data_augmentation_dir, 'ml_input_data_augmented.csv'),
+            'output_data_augmented_path': os.path.join(ml_data_augmentation_dir, 'ml_output_data_augmented.csv'),
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Data augmentation for machine learning failed: {str(e)}'
         }

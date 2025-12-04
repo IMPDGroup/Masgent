@@ -29,7 +29,7 @@ def command_0():
             choices = [
                 '1. Density Functional Theory (DFT) Simulations',
                 '2. Fast simulations using machine learning potentials (MLPs)',
-                '3. Machine Learning Model Training & Evaluation',
+                '3. Simple Machine Learning for Materials Science',
                 '',
                 'AI    ->  Chat with the Masgent AI',
                 'New   ->  Start a new session',
@@ -69,8 +69,8 @@ def command_1():
             choices = [
                 '1.1 Structure Preparation & Manipulation',
                 '1.2 VASP Input File Preparation',
-                '1.3 Standard VASP Workflows',
-                '1.4 VASP Output Analysis',
+                '1.3 Standard VASP Workflows Preparation',
+                '1.4 Workflow Output Analysis',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()
@@ -113,7 +113,7 @@ def command_1_1():
                 '1.1.1 Generate POSCAR from chemical formula',
                 '1.1.2 Convert POSCAR coordinates (Direct <-> Cartesian)',
                 '1.1.3 Convert structure file formats (CIF, POSCAR, XYZ)',
-                '1.1.4 Generate structures with defects (Vacancies, Substitutions, Interstitials with Voronoi)',
+                '1.1.4 Generate structures with defects (Vacancies, Substitutions, Interstitials)',
                 '1.1.5 Generate supercells',
                 '1.1.6 Generate Special Quasirandom Structures (SQS)',
                 '1.1.7 Generate surface slabs',
@@ -320,13 +320,15 @@ def command_2():
         color_print('\nExiting Masgent... Goodbye!\n', 'green')
         sys.exit(0)
 
-@register('3', 'Machine Learning Model Training & Evaluation.')
+@register('3', 'Simple Machine Learning for Materials Science.')
 def command_3():
     try:
         while True:
             clear_and_print_entry_message()
             choices = [
-                '(To be implemented)',
+                '3.1 Dataset Preparation & Visualization',
+                '3.2 Model Design & Hyperparameter Tuning',
+                '3.3 Model Training & Evaluation',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()
@@ -344,8 +346,51 @@ def command_3():
             elif user_input.startswith('Exit'):
                 color_print('\nExiting Masgent... Goodbye!\n', 'green')
                 sys.exit(0)
-            elif user_input.startswith('(To be implemented)'):
-                print('This feature is under development. Stay tuned!')
+            elif user_input.startswith('3.1'):
+                run_command('3.1')
+            elif user_input.startswith('3.2'):
+                run_command('3.2')
+            elif user_input.startswith('3.3'):
+                run_command('3.3')
+            else:
+                continue
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\nExiting Masgent... Goodbye!\n', 'green')
+        sys.exit(0)
+
+@register('3.1', 'Data Preparation & Feature Analysis')
+def command_3_1():
+    try:
+        while True:
+            clear_and_print_entry_message()
+            choices = [
+                '3.1.1 Feature analysis and visualization',
+                '3.1.2 Dimensionality reduction (if too many features)',
+                '3.1.3 Data augmentation (if limited data)'
+            ] + global_commands()
+            cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
+            user_input = cli.launch()
+
+            if user_input.startswith('AI'):
+                ai_backend.main()
+            elif user_input.startswith('New'):
+                start_new_session()
+            elif user_input.startswith('Back'):
+                return
+            elif user_input.startswith('Main'):
+                run_command('0')
+            elif user_input.startswith('Help'):
+                print_help()
+            elif user_input.startswith('Exit'):
+                color_print('\nExiting Masgent... Goodbye!\n', 'green')
+                sys.exit(0)
+            elif user_input.startswith('3.1.1'):
+                run_command('3.1.1')
+            elif user_input.startswith('3.1.2'):
+                run_command('3.1.2')
+            elif user_input.startswith('3.1.3'):
+                run_command('3.1.3')
             else:
                 continue
 

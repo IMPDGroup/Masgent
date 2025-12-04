@@ -2,7 +2,7 @@
 Masgent: Materials Simulation Agent
 
 ## 🚀 Overview
-Masgent is a materials simulation AI agent that streamlines **DFT workflows and analysis**, **fast machine-learning-potential (MLP) simulations**, and **lightweight ML modeling** for materials science. With automated tools for structure handling, VASP input generation, workflow preparation, and rapid property prediction, Masgent simplifies complex simulation tasks and boosts productivity for both researchers and students.
+Masgent is a materials simulation AI agent that streamlines **DFT workflows and analysis**, **fast machine-learning-potential (MLP) simulations**, and **lightweight ML modeling** for materials science. With automated tools for structure handling, VASP input generation, workflow preparation & analysis, and rapid property prediction, Masgent simplifies complex simulation tasks and boosts productivity for both researchers and students.
 
 ## 🧩 Features
 1. Density Functional Theory (DFT) Simulations
@@ -10,7 +10,7 @@ Masgent is a materials simulation AI agent that streamlines **DFT workflows and 
     - 1.1.1 Generate POSCAR from chemical formula
     - 1.1.2 Convert POSCAR coordinates (Direct <-> Cartesian)
     - 1.1.3 Convert structure file formats (CIF, POSCAR, XYZ)
-    - 1.1.4 Generate structures with defects (Vacancies, Substitutions, Interstitials with Voronoi)
+    - 1.1.4 Generate structures with defects (Vacancies, Substitutions, Interstitials)
     - 1.1.5 Generate supercells
     - 1.1.6 Generate Special Quasirandom Structures (SQS)
     - 1.1.7 Generate surface slabs
@@ -48,8 +48,11 @@ Masgent is a materials simulation AI agent that streamlines **DFT workflows and 
     - Elastic Constants Calculation
     - Molecular Dynamics Simulation (NVT)
 
-3. (Planned) Simple Machine Learning for Materials Science
-  - 3.1 (Planned) Data Preparation & Feature Engineering
+3. Simple Machine Learning for Materials Science
+  - 3.1 Data Preparation & Feature Analysis
+    - 3.1.1 Feature analysis and visualization
+    - 3.1.2 Dimensionality reduction (if too many features)
+    - 3.1.3 Data augmentation (if limited data)
   - 3.2 (Planned) Model Design & Hyperparameter Tuning
   - 3.3 (Planned) Model Training & Evaluation
 
@@ -63,6 +66,8 @@ Masgent is a materials simulation AI agent that streamlines **DFT workflows and 
     ```bash
     pip install -U masgent
     ```
+4. Setup POTCAR path for Pymatgen, see instructions: [https://pymatgen.org/installation.html#potcar-setup](https://pymatgen.org/installation.html#potcar-setup)
+    
 
 ## ▶️ Usage
 - After installation, simply run:

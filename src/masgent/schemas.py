@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 
 import os, re
-
+import pandas as pd
 from ase.io import read
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
@@ -19,6 +19,34 @@ class ToolMetadata(BaseModel):
     optional: List[str] = Field([], description='List of optional input parameters for the tool.')
     defaults: Dict[str, Any] = Field({}, description='Dictionary of default values for optional parameters.')
     prereqs: List[str] = Field(..., description='Prerequisite condition that must be satisfied before running the tool.')
+
+class CheckCSVFile(BaseModel):
+    '''
+    Schema for checking validity of a CSV file.
+    '''
+    file_path: str = Field(
+        ...,
+        description='Path to the CSV file. Must exist.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure file exists
+        if not os.path.isfile(self.file_path):
+            raise ValueError(f'CSV file not found: {self.file_path}')
+        
+        # ensure the file is a valid CSV
+        try:
+            _ = pd.read_csv(self.file_path)
+        except Exception as e:
+            raise ValueError(f'Invalid CSV file: {self.file_path}')
+        
+        # ensure the CSV is not empty
+        df = pd.read_csv(self.file_path)
+        if df.empty:
+            raise ValueError(f'CSV file is empty: {self.file_path}')
+
+        return self
 
 class CheckPoscar(BaseModel):
     '''
@@ -1070,5 +1098,124 @@ class RunSimulationUsingMlps(BaseModel):
         # validate md_timestep
         if self.md_timestep <= 0:
             raise ValueError('Molecular dynamics time step (md_timestep) must be a positive number.')
+
+        return self
+
+
+class AnalyzeFeaturesForMachineLearning(BaseModel):
+    '''
+    Schema for analyzing features (correlation matrix) for machine learning based on given input and output datasets.
+    '''
+    input_data_path: str = Field(
+        ...,
+        description='Path to the input dataset file (CSV format). Must exist.'
+    )
+
+    output_data_path: str = Field(
+        ...,
+        description='Path to the output dataset file (CSV format). Must exist.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure input dataset exists
+        if not os.path.isfile(self.input_data_path):
+            raise ValueError(f'Input dataset file not found: {self.input_data_path}')
+        
+        # ensure output dataset exists
+        if not os.path.isfile(self.output_data_path):
+            raise ValueError(f'Output dataset file not found: {self.output_data_path}')
+        
+        # validate that both files are in CSV format
+        if not self.input_data_path.lower().endswith('.csv'):
+            raise ValueError('Input dataset file must be in CSV format.')
+        
+        if not self.output_data_path.lower().endswith('.csv'):
+            raise ValueError('Output dataset file must be in CSV format.')
+        
+        # ensure that both files have the same number of rows
+        input_df = pd.read_csv(self.input_data_path)
+        output_df = pd.read_csv(self.output_data_path)
+        if len(input_df) != len(output_df):
+            raise ValueError('Input and output dataset files must have the same number of rows.')
+
+        return self
+    
+class ReduceDimensionsForMachineLearning(BaseModel):
+    '''
+    Schema for reducing dimensions of features for machine learning based on given input dataset using PCA method
+    '''
+    input_data_path: str = Field(
+        ...,
+        description='Path to the input dataset file (CSV format). Must exist.'
+    )
+
+    n_components: int = Field(
+        2,
+        description='Number of principal components to keep. Defaults to 2 if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure input dataset exists
+        if not os.path.isfile(self.input_data_path):
+            raise ValueError(f'Input dataset file not found: {self.input_data_path}')
+        
+        # validate that the file is in CSV format
+        if not self.input_data_path.lower().endswith('.csv'):
+            raise ValueError('Input dataset file must be in CSV format.')
+        
+        # ensure n_components is valid
+        if self.n_components < 1:
+            raise ValueError('Number of principal components (n_components) must be at least 1.')
+        
+        # ensure that n_components does not exceed number of features
+        input_df = pd.read_csv(self.input_data_path)
+        num_features = input_df.shape[1]
+        if self.n_components > num_features:
+            raise ValueError(f'Number of principal components (n_components) cannot exceed number of features ({num_features}).')
+        
+        return self
+    
+class AugmentDataForMachineLearning(BaseModel):
+    '''
+    Schema for augmenting data for machine learning based on given input dataset using VAE-based method.
+    '''
+    input_data_path: str = Field(
+        ...,
+        description='Path to the input dataset file (CSV format). Must exist.'
+    )
+
+    output_data_path: str = Field(
+        ...,
+        description='Path to the output dataset file (CSV format). Must exist.'
+    )
+
+    num_augmentations: int = Field(
+        100,
+        description='Number of augmented data points to generate. Defaults to 100 if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure input dataset exists
+        if not os.path.isfile(self.input_data_path):
+            raise ValueError(f'Input dataset file not found: {self.input_data_path}')
+        
+        # ensure output dataset exists
+        if not os.path.isfile(self.output_data_path):
+            raise ValueError(f'Output dataset file not found: {self.output_data_path}')
+        
+        # validate that the input file is in CSV format
+        if not self.input_data_path.lower().endswith('.csv'):
+            raise ValueError('Input dataset file must be in CSV format.')
+        
+        # validate that the output file is in CSV format
+        if not self.output_data_path.lower().endswith('.csv'):
+            raise ValueError('Output dataset file must be in CSV format.')
+        
+        # ensure num_augmentations is valid
+        if self.num_augmentations < 1:
+            raise ValueError('Number of augmented data points (num_augmentations) must be at least 1.')
 
         return self

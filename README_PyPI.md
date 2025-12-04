@@ -1,10 +1,10 @@
 # Masgent
 Masgent: Materials Simulation Agent
 
-## Overview
-Masgent is a materials simulation AI agent that streamlines DFT workflows and analysis, fast MLP-based simulations, and simple ML modeling for materials science. With automated tools for structure handling, VASP setup, and rapid property prediction, Masgent simplifies complex simulation workflows and boosts productivity for both researchers and students.
+## 🚀 Overview
+Masgent is a materials simulation AI agent that streamlines **DFT workflows and analysis**, **fast machine-learning-potential (MLP) simulations**, and **lightweight ML modeling** for materials science. With automated tools for structure handling, VASP input generation, workflow preparation, and rapid property prediction, Masgent simplifies complex simulation tasks and boosts productivity for both researchers and students.
 
-## Features
+## 🧩 Features
 1. Density Functional Theory (DFT) Simulations
   - 1.1 Structure Preparation & Manipulation
     - 1.1.1 Generate POSCAR from chemical formula
@@ -53,36 +53,47 @@ Masgent is a materials simulation AI agent that streamlines DFT workflows and an
   - 3.2 (Planned) Model Design & Hyperparameter Tuning
   - 3.3 (Planned) Model Training & Evaluation
 
-## Installation
+## 🔧 Installation
 1. Requirements:
    - Python >= 3.11, < 3.14
-2. Optional requirements:
-   - For AI functionalities: get your OpenAI API key from [platform.openai.com](https://platform.openai.com/account/api-keys)
-   - For Materials Project access: get your Materials Project API key from [materialsproject.org](https://next-gen.materialsproject.org/api)
-3. Install via pip:
-  ```bash
-  pip install -U masgent
-  ```
+2. Optional:
+   - OpenAI API key for AI agent features: [platform.openai.com](https://platform.openai.com/account/api-keys)
+   - Materials Project API key for MP structure access: [materialsproject.org](https://next-gen.materialsproject.org/api)
+3. Install Masgent:
+    ```bash
+    pip install -U masgent
+    ```
 
-## Usage
-- After installation, run the following command to start the Masgent:
-  ```bash
-  masgent
-  ```
+## ▶️ Usage
+- After installation, simply run:
+    ```bash
+    masgent
+    ```
+- You'll guided by an interactive menu and can invoke the AI agent anytime by typing your requests, e.g.,:
+    ```bash
+    > Generate a POSCAR file for NaCl.
+    > Prepare VASP input files for a graphene structure.
+    > Add defects to a silicon crystal POSCAR.
+    > ...
+    ```
 
-## Issues and Suggestions
-If you encounter any issues or have suggestions for improvements, please open an issue on our [GitHub issues](https://github.com/aguang5241/masgent/issues).
+## 🐞 Issues and Suggestions
+Found a bug? Have a feature request?  
+Please open an issue here: [https://github.com/aguang5241/masgent/issues](https://github.com/aguang5241/masgent/issues)
 
-## Cite Us
+## 📚 Cite Us
 If you use Masgent in your research, please cite the following reference:
-```
-@article{
-  title={Masgent: A Materials Simulation Agent},
-  journal={},
-  volume={},
-  pages={},
-  year={},
-  issn={},
-  doi={},
-}
-```
+  ```
+  @article{
+    title={Masgent: A Materials Simulation Agent},
+    journal={},
+    volume={},
+    pages={},
+    year={},
+    issn={},
+    doi={},
+  }
+  ```
+
+## 🙏 Acknowledgements
+Masgent builds on the open-source materials ecosystem, including **ASE**, **Pymatgen**, and modern **Machine Learning Potentials**. We thank the developers of these tools for making advanced materials simulation possible.

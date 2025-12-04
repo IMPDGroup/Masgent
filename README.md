@@ -1,7 +1,6 @@
-# Masgent
-✨ Masgent: Materials Simulation Agent
+# ✨ Masgent: Materials Simulation Agent
 
-<img src="./res/masgent-logo.png" alt="Masgent: Materials Simulation Agent" width="600"/>
+<div align=center><img src='./res/masgent-logo.png' alt='Masgent Logo' width='600'/></div>
 
 ## 🚀 Overview
 Masgent is a materials simulation AI agent that streamlines **DFT workflows and analysis**, **fast machine-learning-potential (MLP) simulations**, and **lightweight ML modeling** for materials science. With automated tools for structure handling, VASP input generation, workflow preparation, and rapid property prediction, Masgent simplifies complex simulation tasks and boosts productivity for both researchers and students.

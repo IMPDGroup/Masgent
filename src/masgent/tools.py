@@ -2018,3 +2018,130 @@ def augment_data_for_machine_learning(
             'status': 'error',
             'message': f'Data augmentation for machine learning failed: {str(e)}'
         }
+
+@with_metadata(schemas.ToolMetadata(
+    name='Design model for machine learning',
+    description='Design model for machine learning using Optuna-based hyperparameter optimization based on given input and output datasets',
+    requires=['input_data_path', 'output_data_path'],
+    optional=['n_trials'],
+    defaults={'n_trials': 100},
+    prereqs=[],
+))
+def design_model_for_machine_learning(
+    input_data_path: str,
+    output_data_path: str,
+    n_trials: int = 100,
+) -> dict:
+    '''
+    Design model for machine learning using Optuna-based hyperparameter optimization
+    '''
+    try:
+        schemas.DesignModelForMachineLearning(
+            input_data_path=input_data_path,
+            output_data_path=output_data_path,
+            n_trials=n_trials,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
+    
+    try:
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
+
+        machine_learning_dir = os.path.join(runs_dir, 'machine_learning')
+        os.makedirs(machine_learning_dir, exist_ok=True)
+
+        ml_model_design_dir = os.path.join(machine_learning_dir, 'ml_model_design')
+        os.makedirs(ml_model_design_dir, exist_ok=True)
+
+        # Run Optuna for model design
+        from masgent.utils.nn_design import optimize
+
+        optimize(
+            input_data=input_data_path,
+            output_data=output_data_path,
+            save_path=ml_model_design_dir,
+            n_trials=n_trials,
+        )
+
+        return {
+            'status': 'success',
+            'message': f'Completed model design for machine learning in {ml_model_design_dir}.',
+            'ml_model_design_dir': ml_model_design_dir,
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Model design for machine learning failed: {str(e)}'
+        }
+
+@with_metadata(schemas.ToolMetadata(
+    name='Train & evaluate model for machine learning',
+    description='Train model for machine learning based on given input and output datasets as well as best model structure and parameters',
+    requires=['input_data_path', 'output_data_path', 'best_model_path', 'best_model_params_path'],
+    optional=['max_epochs', 'patience'],
+    defaults={'max_epochs': 1000, 'patience': 50},
+    prereqs=[],
+))
+def train_model_for_machine_learning(
+    input_data_path: str,
+    output_data_path: str,
+    best_model_path: str,
+    best_model_params_path: str,
+    max_epochs: int = 1000,
+    patience: int = 50,
+) -> dict:
+    '''
+    Train & evaluate model for machine learning based on given input and output datasets as well as best model structure and parameters
+    '''
+    try:
+        schemas.TrainModelForMachineLearning(
+            input_data_path=input_data_path,
+            output_data_path=output_data_path,
+            best_model_path=best_model_path,
+            best_model_params_path=best_model_params_path,
+            max_epochs=max_epochs,
+            patience=patience,
+        )
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
+    
+    try:
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
+
+        machine_learning_dir = os.path.join(runs_dir, 'machine_learning')
+        os.makedirs(machine_learning_dir, exist_ok=True)
+
+        ml_model_training_dir = os.path.join(machine_learning_dir, 'ml_model_training')
+        os.makedirs(ml_model_training_dir, exist_ok=True)
+
+        # Run model training
+        from masgent.utils.nn_train import train
+        
+        train(
+            input_data=input_data_path,
+            output_data=output_data_path,
+            best_model_pkl=best_model_path,
+            best_model_params=best_model_params_path,
+            epochs=max_epochs,
+            patience=patience,
+            save_path=ml_model_training_dir,
+        )
+
+        return {
+            'status': 'success',
+            'message': f'Completed model training for machine learning in {ml_model_training_dir}.',
+            'ml_model_training_dir': ml_model_training_dir,
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Model training for machine learning failed: {str(e)}'
+        }

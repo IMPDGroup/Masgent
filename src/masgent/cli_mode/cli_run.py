@@ -1772,3 +1772,200 @@ def command_3_1_3():
     result = tools.augment_data_for_machine_learning(input_data_path=input_data_path, output_data_path=output_data_path, num_augmentations=num_augmentations)
     color_print(result['message'], 'green')
     time.sleep(3)
+
+@register('3.2', 'Model Design & Hyperparameter Tuning')
+def command_3_2():
+    try:
+        while True:
+            input_data_path = color_input('\nEnter the path to the input feature data file (CSV): ', 'yellow').strip()
+
+            if not input_data_path:
+                continue
+
+            try:
+                schemas.CheckCSVFile(file_path=input_data_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid CSV file: {input_data_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            output_data_path = color_input('\nEnter the path to the output feature data file (CSV): ', 'yellow').strip()
+
+            if not output_data_path:
+                continue
+
+            try:
+                schemas.CheckCSVFile(file_path=output_data_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid directory: {output_data_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            num_trials_str = color_input('\nEnter the number of hyperparameter tuning trials (e.g., 50): ', 'yellow').strip()
+
+            if not num_trials_str:
+                continue
+
+            try:
+                num_trials = int(num_trials_str)
+                schemas.DesignModelForMachineLearning(input_data_path=input_data_path, output_data_path=output_data_path, n_trials=num_trials)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid number of trials: {num_trials_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    result = tools.design_model_for_machine_learning(input_data_path=input_data_path, output_data_path=output_data_path, n_trials=num_trials)
+    color_print(result['message'], 'green')
+    time.sleep(3)
+
+@register('3.3', 'Model Training & Evaluation')
+def command_3_3():
+    try:
+        while True:
+            input_data_path = color_input('\nEnter the path to the input feature data file (CSV): ', 'yellow').strip()
+
+            if not input_data_path:
+                continue
+
+            try:
+                schemas.CheckCSVFile(file_path=input_data_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid CSV file: {input_data_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            output_data_path = color_input('\nEnter the path to the output feature data file (CSV): ', 'yellow').strip()
+
+            if not output_data_path:
+                continue
+
+            try:
+                schemas.CheckCSVFile(file_path=output_data_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid directory: {output_data_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            best_model_path = color_input('\nEnter the path to the best model file from model design (e.g., best_model.pkl): ', 'yellow').strip()
+
+            if not best_model_path:
+                continue
+
+            try:
+                schemas.CheckPklFile(file_path=best_model_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid model file: {best_model_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            best_model_params_path = color_input('\nEnter the path to the best model hyperparameters file from model design (e.g., best_model_params.log): ', 'yellow').strip()
+
+            if not best_model_params_path:
+                continue
+
+            try:
+                schemas.CheckLogFile(file_path=best_model_params_path)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid hyperparameters file: {best_model_params_path}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            max_epochs_str = color_input('\nEnter the maximum number of training epochs (e.g., 1000): ', 'yellow').strip()
+
+            if not max_epochs_str:
+                continue
+
+            try:
+                max_epochs = int(max_epochs_str)
+                schemas.TrainModelForMachineLearning(
+                    input_data_path=input_data_path, 
+                    output_data_path=output_data_path, 
+                    best_model_path=best_model_path, 
+                    best_model_params_path=best_model_params_path, 
+                    max_epochs=max_epochs
+                    )
+                break
+            except Exception:
+                color_print(f'[Error] Invalid maximum epochs: {max_epochs_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            patience_str = color_input('\nEnter the early stopping patience (number of epochs with no improvement) (e.g., 50): ', 'yellow').strip()
+
+            if not patience_str:
+                continue
+
+            try:
+                patience = int(patience_str)
+                schemas.TrainModelForMachineLearning(
+                    input_data_path=input_data_path, 
+                    output_data_path=output_data_path, 
+                    best_model_path=best_model_path, 
+                    best_model_params_path=best_model_params_path, 
+                    max_epochs=max_epochs, 
+                    patience=patience
+                    )
+                break
+            except Exception:
+                color_print(f'[Error] Invalid patience: {patience_str}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    result = tools.train_model_for_machine_learning(
+        input_data_path=input_data_path, 
+        output_data_path=output_data_path, 
+        best_model_path=best_model_path, 
+        best_model_params_path=best_model_params_path, 
+        max_epochs=max_epochs, 
+        patience=patience
+        )
+    color_print(result['message'], 'green')
+    time.sleep(3)

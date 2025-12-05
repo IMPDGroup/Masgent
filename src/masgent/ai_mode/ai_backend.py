@@ -231,6 +231,8 @@ def main():
             tools.analyze_features_for_machine_learning,
             tools.reduce_dimensions_for_machine_learning,
             tools.augment_data_for_machine_learning,
+            tools.design_model_for_machine_learning,
+            tools.train_model_for_machine_learning,
         ],
         history_processors=[keep_recent_messages],
         )

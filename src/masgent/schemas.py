@@ -20,6 +20,47 @@ class ToolMetadata(BaseModel):
     defaults: Dict[str, Any] = Field({}, description='Dictionary of default values for optional parameters.')
     prereqs: List[str] = Field(..., description='Prerequisite condition that must be satisfied before running the tool.')
 
+class CheckPklFile(BaseModel):
+    '''
+    Schema for checking validity of a machine learning model file.
+    '''
+    file_path: str = Field(
+        ...,
+        description='Path to the machine learning model file. Must exist.'
+    )
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure file exists
+        if not os.path.isfile(self.file_path):
+            raise ValueError(f'Model file not found: {self.file_path}')
+        
+        # ensure the file is a valid pkl model file
+        if not self.file_path.endswith('.pkl'):
+            raise ValueError(f'Invalid model file format (must be .pkl): {self.file_path}')
+
+        return self
+
+class CheckLogFile(BaseModel):
+    '''
+    Schema for checking validity of a log file.
+    '''
+    file_path: str = Field(
+        ...,
+        description='Path to the log file. Must exist.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure file exists
+        if not os.path.isfile(self.file_path):
+            raise ValueError(f'Log file not found: {self.file_path}')
+        
+        # ensure the file is a valid log file
+        if not self.file_path.endswith('.log'):
+            raise ValueError(f'Invalid log file format (must be .log): {self.file_path}')
+
+        return self
+
 class CheckCSVFile(BaseModel):
     '''
     Schema for checking validity of a CSV file.
@@ -1217,5 +1258,136 @@ class AugmentDataForMachineLearning(BaseModel):
         # ensure num_augmentations is valid
         if self.num_augmentations < 1:
             raise ValueError('Number of augmented data points (num_augmentations) must be at least 1.')
+
+        return self
+    
+class DesignModelForMachineLearning(BaseModel):
+    '''
+    Schema for designing machine learning model using Optuna based on given input and output datasets.
+    '''
+    input_data_path: str = Field(
+        ...,
+        description='Path to the input dataset file (CSV format). Must exist.'
+    )
+
+    output_data_path: str = Field(
+        ...,
+        description='Path to the output dataset file (CSV format). Must exist.'
+    )
+
+    n_trials: int = Field(
+        100,
+        description='Number of Optuna trials for hyperparameter optimization. Defaults to 100 if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure input dataset exists
+        if not os.path.isfile(self.input_data_path):
+            raise ValueError(f'Input dataset file not found: {self.input_data_path}')
+        
+        # ensure output dataset exists
+        if not os.path.isfile(self.output_data_path):
+            raise ValueError(f'Output dataset file not found: {self.output_data_path}')
+        
+        # validate that both files are in CSV format
+        if not self.input_data_path.lower().endswith('.csv'):
+            raise ValueError('Input dataset file must be in CSV format.')
+        
+        if not self.output_data_path.lower().endswith('.csv'):
+            raise ValueError('Output dataset file must be in CSV format.')
+        
+        # ensure that both files have the same number of rows
+        input_df = pd.read_csv(self.input_data_path)
+        output_df = pd.read_csv(self.output_data_path)
+        if len(input_df) != len(output_df):
+            raise ValueError('Input and output dataset files must have the same number of rows.')
+        
+        # ensure n_trials is valid
+        if self.n_trials < 1:
+            raise ValueError('Number of Optuna trials (n_trials) must be at least 1.')
+
+        return self
+    
+class TrainModelForMachineLearning(BaseModel):
+    '''
+    Schema for training & evaluating machine learning model based on given input and output datasets and model hyperparameters.
+    '''
+    input_data_path: str = Field(
+        ...,
+        description='Path to the input dataset file (CSV format). Must exist.'
+    )
+
+    output_data_path: str = Field(
+        ...,
+        description='Path to the output dataset file (CSV format). Must exist.'
+    )
+
+    best_model_path: str = Field(
+        ...,
+        description='Path to the best designed model file (pickle format). Must exist.'
+    )
+
+    best_model_params_path: str = Field(
+        ...,
+        description='Path to the best model hyperparameters file (log format). Must exist.'
+    )
+
+    max_epochs: int = Field(
+        1000,
+        description='Maximum number of training epochs. Defaults to 1000 if not provided.'
+    )
+
+    patience: int = Field(
+        50,
+        description='Number of epochs with no improvement after which training will be stopped. Defaults to 50 if not provided.'
+    )
+
+    @model_validator(mode='after')
+    def validator(self):
+        # ensure input dataset exists
+        if not os.path.isfile(self.input_data_path):
+            raise ValueError(f'Input dataset file not found: {self.input_data_path}')
+        
+        # ensure output dataset exists
+        if not os.path.isfile(self.output_data_path):
+            raise ValueError(f'Output dataset file not found: {self.output_data_path}')
+        
+        # validate that both files are in CSV format
+        if not self.input_data_path.lower().endswith('.csv'):
+            raise ValueError('Input dataset file must be in CSV format.')
+        
+        if not self.output_data_path.lower().endswith('.csv'):
+            raise ValueError('Output dataset file must be in CSV format.')
+        
+        # ensure that both files have the same number of rows
+        input_df = pd.read_csv(self.input_data_path)
+        output_df = pd.read_csv(self.output_data_path)
+        if len(input_df) != len(output_df):
+            raise ValueError('Input and output dataset files must have the same number of rows.')
+        
+        # ensure best model file exists
+        if not os.path.isfile(self.best_model_path):
+            raise ValueError(f'Best model file not found: {self.best_model_path}')
+        
+        # ensure best model params file exists
+        if not os.path.isfile(self.best_model_params_path):
+            raise ValueError(f'Best model hyperparameters file not found: {self.best_model_params_path}')
+        
+        # validate that best model file is in pickle format
+        if not self.best_model_path.lower().endswith('.pkl'):
+            raise ValueError('Best model file must be in pickle (.pkl) format.')
+        
+        # validate that best model params file is in log format
+        if not self.best_model_params_path.lower().endswith('.log'):
+            raise ValueError('Best model hyperparameters file must be in log (.log) format.')
+        
+        # ensure max_epochs is valid
+        if self.max_epochs < 1:
+            raise ValueError('Maximum number of training epochs (max_epochs) must be at least 1.')
+        
+        # ensure patience is valid
+        if self.patience < 1:
+            raise ValueError('Patience must be at least 1.')
 
         return self

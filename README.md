@@ -62,8 +62,8 @@ Masgent is a materials simulation AI agent that streamlines **DFT workflows and 
     - 3.1.1 Feature analysis and visualization
     - 3.1.2 Dimensionality reduction (if too many features)
     - 3.1.3 Data augmentation (if limited data)
-  - 3.2 (Planned) Model Design & Hyperparameter Tuning
-  - 3.3 (Planned) Model Training & Evaluation
+  - 3.2 Model Design & Hyperparameter Tuning
+  - 3.3 Model Training & Evaluation
 
 ## 🔧 Installation
 1. Requirements:

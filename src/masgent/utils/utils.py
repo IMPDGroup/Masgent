@@ -2,11 +2,8 @@
 
 import os, sys, datetime, time
 import numpy as np
-from scipy.optimize import curve_fit
 from pathlib import Path
 from colorama import Fore, Style
-from mp_api.client import MPRester
-from openai import OpenAI
 from importlib.metadata import version, PackageNotFoundError
 
 def create_deformation_matrices():
@@ -72,6 +69,8 @@ def eos_func(volume, a, b, c, d):
     return energy
 
 def fit_eos(volumes, energies):
+    from scipy.optimize import curve_fit
+
     volumes_fit = np.linspace(min(volumes) * 0.99, max(volumes) * 1.01, 100)
     popt, pcov = curve_fit(eos_func, volumes, energies)
     energies_fit = eos_func(volumes_fit, *popt)
@@ -198,6 +197,7 @@ def load_system_prompts():
 
 def validate_openai_api_key(key):
     try:
+        from openai import OpenAI
         client = OpenAI(api_key=key)
         client.models.list()
         # color_print('[Info] OpenAI API key validated successfully.\n', 'green')
@@ -225,6 +225,7 @@ def ask_for_openai_api_key():
     
 def validate_mp_api_key(key):
     try:
+        from mp_api.client import MPRester
         with MPRester(key, mute_progress_bars=True) as mpr:
             _ = mpr.materials.search(
                 formula='Si',

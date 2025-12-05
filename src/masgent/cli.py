@@ -3,7 +3,6 @@
 import sys
 from bullet import Bullet, colors
 
-from masgent.ai_mode import ai_backend
 from masgent.cli_mode.cli_entries import run_command
 from masgent.utils.utils import (
     color_print,
@@ -33,6 +32,7 @@ def main():
             user_input = cli.launch()
             
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             if user_input.startswith('New'):
                 start_new_session()

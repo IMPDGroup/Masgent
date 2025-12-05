@@ -3,7 +3,6 @@
 import sys
 from bullet import Bullet, colors
 
-from masgent.ai_mode import ai_backend
 from masgent.cli_mode.cli_run import register, run_command
 from masgent.utils.utils import (
     color_print, 
@@ -40,6 +39,7 @@ def command_0():
             user_input = cli.launch()
             
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -76,6 +76,7 @@ def command_1():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -123,6 +124,7 @@ def command_1_1():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -173,6 +175,7 @@ def command_1_2():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -216,6 +219,7 @@ def command_1_3():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -257,6 +261,7 @@ def command_1_4():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -293,6 +298,7 @@ def command_2():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -334,6 +340,7 @@ def command_3():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -373,6 +380,7 @@ def command_3_1():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()

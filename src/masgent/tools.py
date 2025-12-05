@@ -5,39 +5,12 @@ import os, warnings, random, shutil, re, joblib
 warnings.filterwarnings('ignore')
 
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import torch
-import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend for plotting
 from typing import Literal, List
 from pathlib import Path
 from dotenv import load_dotenv
-from mp_api.client import MPRester
-from sevenn.calculator import SevenNetCalculator
-from chgnet.model.dynamics import CHGNetCalculator
-from orb_models.forcefield import pretrained
-from orb_models.forcefield.calculator import ORBCalculator
-from mattersim.forcefield import MatterSimCalculator
-from sklearn.decomposition import PCA
-from ase import units
-from ase.build import surface
-from ase.filters import FrechetCellFilter
-from ase.optimize import LBFGS
 from ase.io import read, write
-from ase.mep import NEB
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
-from ase.md.nose_hoover_chain import NoseHooverChainNVT
-from ase.md import MDLogger
-from icet import ClusterSpace
-from icet.tools.structure_generation import generate_sqs
-from icet.input_output.logging_tools import set_log_config
 from pymatgen.core import Structure
 from pymatgen.io.vasp import Poscar, Kpoints
-from pymatgen.analysis.defects import generators
-from pymatgen.analysis.elasticity.strain import Strain
-from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.io.vasp.sets import (
     MPStaticSet, 
     MPRelaxSet, 
@@ -50,8 +23,6 @@ from pymatgen.io.vasp.sets import (
     )
 
 from masgent import schemas
-from masgent.utils.interface_maker import run_interface_maker
-from masgent.ml import run_cvae_augmentation
 from masgent.utils.utils import (
     write_comments,
     ask_for_mp_api_key,
@@ -191,6 +162,7 @@ def generate_vasp_poscar(formula: str) -> dict:
                 validate_mp_api_key(os.environ['MP_API_KEY'])
             _mp_key_checked = True
         
+        from mp_api.client import MPRester
         with MPRester(mute_progress_bars=True) as mpr:
             docs = mpr.materials.summary.search(formula=formula)
             if not docs:
@@ -729,6 +701,8 @@ def generate_vasp_poscar_with_interstitial_defects(
         atoms = read(poscar_path, format='vasp')
 
         # Read atoms from ASE and convert to Pymatgen Structure
+        from pymatgen.analysis.defects import generators
+
         structure = Structure.from_ase_atoms(atoms)
         interstitial_generator = generators.VoronoiInterstitialGenerator().generate(structure=structure, insert_species=[defect_element])
         defect_sites, defect_structures = [], []
@@ -857,6 +831,10 @@ def generate_sqs_from_poscar(
         }
 
     try:
+        from icet import ClusterSpace
+        from icet.tools.structure_generation import generate_sqs
+        from icet.input_output.logging_tools import set_log_config
+
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
 
         sqs_dir = os.path.join(runs_dir, 'sqs')
@@ -982,6 +960,7 @@ def generate_surface_slab_from_poscar(
         surface_slab_dir = os.path.join(runs_dir, 'surface_slab')
         os.makedirs(surface_slab_dir, exist_ok=True)
         
+        from ase.build import surface
         bulk_atoms = read(poscar_path, format='vasp')
         slab_atoms = surface(lattice=bulk_atoms, indices=miller_indices, layers=slab_layers, vacuum=vacuum_thickness, tol=1e-10, periodic=True)
         write(os.path.join(surface_slab_dir, 'POSCAR'), slab_atoms, format='vasp', direct=True, sort=True)
@@ -1066,6 +1045,7 @@ def generate_interface_from_poscars(
         interfaces_dir = os.path.join(runs_dir, 'interface_maker')
         os.makedirs(interfaces_dir, exist_ok=True)
 
+        from masgent.utils.interface_maker import run_interface_maker
         run_interface_maker(
             lower_conv=lower_poscar_path,
             upper_conv=upper_poscar_path,
@@ -1460,6 +1440,8 @@ def generate_vasp_workflow_of_neb(
         }
     
     try:
+        from ase.mep import NEB
+
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
         
         neb_dir = os.path.join(runs_dir, 'neb_calculations')
@@ -1553,6 +1535,11 @@ def run_simulation_using_mlps(
     Supported tasks include: single point calculation, equation of state (EOS), elastic constants, and molecular dynamics (MD) simulations.
     '''
     def fit_and_plot_eos(volumes, energies, mlps_type, task_dir):
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend for plotting
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
         volumes_fit, energies_fit = fit_eos(volumes, energies)
         eos_fit_df = pd.DataFrame({'Volume[Å³]': volumes_fit, 'Energy[eV/atom]': energies_fit})
         eos_fit_df.to_csv(f'{task_dir}/eos_fit.csv', index=False, float_format='%.8f')
@@ -1570,6 +1557,11 @@ def run_simulation_using_mlps(
         plt.savefig(f'{task_dir}/eos_curve.png', dpi=330)
 
     def parse_and_plot_md_log(logfile, mlps_type, task_dir):
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend for plotting
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
         with open(logfile, 'r') as f:
             lines = f.readlines()
         data_lines = [line for line in lines if re.match(r'^\s*\d+\.\d+', line)]
@@ -1629,16 +1621,21 @@ def run_simulation_using_mlps(
         scale_factors = [0.94, 0.96, 0.98, 1.00, 1.02, 1.04, 1.06]
 
         if mlps_type == 'SevenNet':
+            from sevenn.calculator import SevenNetCalculator
             calc = SevenNetCalculator(model='7net-0')
         elif mlps_type == 'CHGNet':
+            from chgnet.model.dynamics import CHGNetCalculator
             calc = CHGNetCalculator()
         elif mlps_type == 'Orb-v3':
+            from orb_models.forcefield import pretrained
+            from orb_models.forcefield.calculator import ORBCalculator
             orbff = pretrained.orb_v3_conservative_inf_omat(
             device='cpu',
             precision="float32-high",   # or "float32-highest" / "float64
             )
             calc = ORBCalculator(orbff, device='cpu')
         elif mlps_type == 'MatSim':
+            from mattersim.forcefield import MatterSimCalculator
             calc = MatterSimCalculator()
         else:
             return {
@@ -1646,6 +1643,9 @@ def run_simulation_using_mlps(
                 'message': f'Invalid MLPs type: {mlps_type}.'
             }
         
+        from ase.filters import FrechetCellFilter
+        from ase.optimize import LBFGS
+
         if task_type == 'single':
             task_dir = os.path.join(mlps_simulation_dir, 'single')
             os.makedirs(task_dir, exist_ok=True)
@@ -1704,6 +1704,10 @@ def run_simulation_using_mlps(
                 'eos_curve_png_path': f'{task_dir}/eos_curve.png',
             }
         elif task_type == 'elastic':
+            from pymatgen.analysis.elasticity.strain import Strain
+            from pymatgen.analysis.elasticity.stress import Stress
+            from pymatgen.analysis.elasticity.elastic import ElasticTensor
+
             task_dir = os.path.join(mlps_simulation_dir, 'elastic')
             os.makedirs(task_dir, exist_ok=True)
             structure = Structure.from_file(poscar_path)
@@ -1762,6 +1766,11 @@ def run_simulation_using_mlps(
                 'elastic_constants_path': f'{task_dir}/elastic_constants.txt',
             }
         elif task_type == 'md':
+            from ase import units
+            from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
+            from ase.md.nose_hoover_chain import NoseHooverChainNVT
+            from ase.md import MDLogger
+
             task_dir = os.path.join(mlps_simulation_dir, 'md')
             os.makedirs(task_dir, exist_ok=True)
             atoms = read(poscar_path, format='vasp')
@@ -1852,6 +1861,11 @@ def analyze_features_for_machine_learning(
         corr_matrix = combined_df.corr()
         corr_matrix.to_csv(os.path.join(ml_feature_analysis_dir, 'correlation_matrix.csv'), float_format='%.8f')
         
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend for plotting
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
         sns.set_theme(font_scale=1.0, style='whitegrid')
         matplotlib.rcParams['xtick.direction'] = 'in'
         matplotlib.rcParams['ytick.direction'] = 'in'
@@ -1921,6 +1935,8 @@ def reduce_dimensions_for_machine_learning(
         os.makedirs(ml_dimension_reduction_dir, exist_ok=True)
 
         input_df = pd.read_csv(input_data_path)
+
+        from sklearn.decomposition import PCA
         reducer = PCA(n_components=n_components)
         joblib.dump(reducer, os.path.join(ml_dimension_reduction_dir, "pca_reducer.pkl"))
         reduced_data = reducer.fit_transform(input_df.values)
@@ -1981,6 +1997,8 @@ def augment_data_for_machine_learning(
         output_df = pd.read_csv(output_data_path)
 
         # Run VAE for data augmentation
+        from masgent.utils.cave import run_cvae_augmentation
+
         x_aug_df, y_aug_df = run_cvae_augmentation(input_df=input_df, output_df=output_df, num_aug=num_augmentations)
         x_all_df = pd.concat([input_df, x_aug_df], ignore_index=True)
         y_all_df = pd.concat([output_df, y_aug_df], ignore_index=True)

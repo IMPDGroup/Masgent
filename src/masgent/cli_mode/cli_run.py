@@ -6,7 +6,6 @@ from yaspin import yaspin
 from yaspin.spinners import Spinners
 
 from masgent import tools, schemas
-from masgent.ai_mode import ai_backend
 from masgent.utils.utils import (
     color_print, 
     color_input, 
@@ -56,6 +55,7 @@ def check_poscar():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -129,6 +129,7 @@ def command_1_1_2():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -182,6 +183,7 @@ def command_1_1_3():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -255,6 +257,7 @@ def command_1_1_4():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -869,6 +872,7 @@ def command_1_2_1():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -941,6 +945,7 @@ def command_1_2_2():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -1009,6 +1014,7 @@ def command_1_2_3():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -1144,6 +1150,7 @@ def command_1_3_1():
             user_input = cli.launch()
 
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()
@@ -1451,6 +1458,7 @@ def call_mlps(mlps_type: str):
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()
             if user_input.startswith('AI'):
+                from masgent.ai_mode import ai_backend
                 ai_backend.main()
             elif user_input.startswith('New'):
                 start_new_session()

@@ -26,11 +26,11 @@ Masgent: Materials Simulation Agent
 Masgent is a materials simulation AI agent that streamlines **DFT workflows and analysis**, **fast machine-learning-potential (MLP) simulations**, and **lightweight ML modeling** for materials science. With automated tools for structure handling, VASP input generation, workflow preparation & analysis, and rapid property prediction, Masgent simplifies complex simulation tasks and boosts productivity for both researchers and students.
 
 ## 🎥 Demos
-- Basic Usage:  
+- **Basic Usage:**  
   e.g., prepare POSCAR files and generate SQS structures
   <div align=left><img src='./res/basic_sm.gif' alt='Basic Usage' width='800'/></div>
 
-- AI Agent:  
+- **AI Agent:**  
   e.g., prepare POSCAR files and run EOS calculations simply by chatting
   <div align=left><img src='./res/ai_sm.gif' alt='AI Agent' width='800'/></div>
 

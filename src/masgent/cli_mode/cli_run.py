@@ -1253,7 +1253,12 @@ def command_1_3_1():
     
     print('')
     with yaspin(Spinners.dots, text='Generating VASP workflow for convergence tests...', color='cyan') as sp:
-        result = tools.generate_vasp_workflow_of_convergence_tests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels, kpoint_levels=kpoint_levels)
+        if test_type == 'encut':
+            result = tools.generate_vasp_workflow_of_convergence_tests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels)
+        elif test_type == 'kpoints':
+            result = tools.generate_vasp_workflow_of_convergence_tests(poscar_path=poscar_path, test_type=test_type, kpoint_levels=kpoint_levels)
+        else:
+            result = tools.generate_vasp_workflow_of_convergence_tests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels, kpoint_levels=kpoint_levels)
     color_print(result['message'], 'green')
     time.sleep(3)
 

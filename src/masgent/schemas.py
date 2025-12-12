@@ -973,9 +973,9 @@ class GenerateVaspWorkflowOfAimd(BaseModel):
         description='Path to the POSCAR file. Defaults to "POSCAR" in current directory if not provided.'
     )
 
-    temperature: int = Field(
-        1000,
-        description='Temperature in Kelvin for AIMD simulations. Defaults to 1000 K if not provided.'
+    temperatures: List[int] = Field(
+        [500, 1000, 1500, 2000, 2500],
+        description='List of temperatures in Kelvin for AIMD simulations. Defaults to [500, 1000, 1500, 2000, 2500] K if not provided.'
     )
 
     md_steps: int = Field(
@@ -1000,9 +1000,9 @@ class GenerateVaspWorkflowOfAimd(BaseModel):
         except Exception as e:
             raise ValueError(f'Invalid POSCAR file: {self.poscar_path}')
         
-        # validate temperature
-        if self.temperature < 0:
-            raise ValueError('Temperature must be a non-negative number.')
+        # validate temperatures
+        if not all(isinstance(temp, int) and temp > 0 for temp in self.temperatures):
+            raise ValueError('All temperatures must be positive integers.')
         
         # validate md_steps
         if self.md_steps < 1:

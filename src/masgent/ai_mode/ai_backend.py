@@ -231,6 +231,7 @@ def main():
             tools.analyze_vasp_workflow_of_convergence_tests,
             tools.analyze_vasp_workflow_of_eos,
             tools.analyze_vasp_workflow_of_elastic_constants,
+            tools.analyze_vasp_workflow_of_aimd,
             tools.run_simulation_using_mlps,
             tools.analyze_features_for_machine_learning,
             tools.reduce_dimensions_for_machine_learning,

@@ -63,7 +63,7 @@ Masgent is a materials simulation AI agent that streamlines **DFT workflows and 
     - 1.4.1 Convergence test analysis
     - 1.4.2 Equation of State (EOS) analysis
     - 1.4.3 Elastic constants analysis 
-    - 1.4.4 (Planned) Ab-initio Molecular Dynamics (AIMD) analysis
+    - 1.4.4 Ab-initio Molecular Dynamics (AIMD) analysis
     - 1.4.5 (Planned) Nudged Elastic Band (NEB) analysis
 
 2. Fast Simulations Using Machine Learning Potentials (MLPs)

@@ -1251,7 +1251,9 @@ def command_1_3_1():
             time.sleep(1)
             return
     
-    result = tools.generate_vasp_workflow_of_convergence_tests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels, kpoint_levels=kpoint_levels)
+    print('')
+    with yaspin(Spinners.dots, text='Generating VASP workflow for convergence tests...', color='cyan') as sp:
+        result = tools.generate_vasp_workflow_of_convergence_tests(poscar_path=poscar_path, test_type=test_type, encut_levels=encut_levels, kpoint_levels=kpoint_levels)
     color_print(result['message'], 'green')
     time.sleep(3)
 
@@ -1283,7 +1285,9 @@ def command_1_3_2():
         time.sleep(1)
         return
     
-    result = tools.generate_vasp_workflow_of_eos(poscar_path=poscar_path, scale_factors=scale_factors)
+    print('')
+    with yaspin(Spinners.dots, text='Generating VASP workflow for EOS calculations...', color='cyan') as sp:
+        result = tools.generate_vasp_workflow_of_eos(poscar_path=poscar_path, scale_factors=scale_factors)
     color_print(result['message'], 'green')
     time.sleep(3)
 
@@ -1296,7 +1300,9 @@ def command_1_3_3():
         time.sleep(1)
         return
 
-    result = tools.generate_vasp_workflow_of_elastic_constants(poscar_path=poscar_path)
+    print('')
+    with yaspin(Spinners.dots, text='Generating VASP workflow for elastic constants calculations...', color='cyan') as sp:
+        result = tools.generate_vasp_workflow_of_elastic_constants(poscar_path=poscar_path)
     color_print(result['message'], 'green')
     time.sleep(3)
 
@@ -1311,17 +1317,17 @@ def command_1_3_4():
 
     try:
         while True:
-            temperature_str = color_input('\nEnter the simulation temperature in K (e.g., 1000): ', 'yellow').strip()
+            temperatures_str = color_input('\nEnter the simulation temperature(s) in K (e.g., 500 1000 1500 2000 2500): ', 'yellow').strip()
 
-            if not temperature_str:
+            if not temperatures_str:
                 continue
 
             try:
-                temperature = int(temperature_str)
-                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperature=temperature)
+                temperatures = [int(x) for x in temperatures_str.split()]
+                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperatures=temperatures)
                 break
             except Exception:
-                color_print(f'[Error] Invalid temperature: {temperature_str}, please double check and try again.\n', 'red')
+                color_print(f'[Error] Invalid temperature: {temperatures_str}, please double check and try again.\n', 'red')
 
     except (KeyboardInterrupt, EOFError):
         color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
@@ -1337,7 +1343,7 @@ def command_1_3_4():
 
             try:
                 md_steps = int(md_steps_str)
-                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperature=temperature, md_steps=md_steps)
+                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperatures=temperatures, md_steps=md_steps)
                 break
             except Exception:
                 color_print(f'[Error] Invalid MD steps: {md_steps_str}, please double check and try again.\n', 'red')
@@ -1356,7 +1362,7 @@ def command_1_3_4():
 
             try:
                 md_timestep = float(md_timestep_str)
-                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperature=temperature, md_steps=md_steps, md_timestep=md_timestep)
+                schemas.GenerateVaspWorkflowOfAimd(poscar_path=poscar_path, temperatures=temperatures, md_steps=md_steps, md_timestep=md_timestep)
                 break
             except Exception:
                 color_print(f'[Error] Invalid MD timestep: {md_timestep_str}, please double check and try again.\n', 'red')
@@ -1366,7 +1372,9 @@ def command_1_3_4():
         time.sleep(1)
         return
     
-    result = tools.generate_vasp_workflow_of_aimd(poscar_path=poscar_path, temperature=temperature, md_steps=md_steps, md_timestep=md_timestep)
+    print('')
+    with yaspin(Spinners.dots, text='Generating VASP workflow for AIMD simulations...', color='cyan') as sp:
+        result = tools.generate_vasp_workflow_of_aimd(poscar_path=poscar_path, temperatures=temperatures, md_steps=md_steps, md_timestep=md_timestep)
     color_print(result['message'], 'green')
     time.sleep(3)
 
@@ -1427,7 +1435,9 @@ def command_1_3_5():
         time.sleep(1)
         return
     
-    result = tools.generate_vasp_workflow_of_neb(initial_poscar_path=initial_poscar_path, final_poscar_path=final_poscar_path, num_images=num_images)
+    print('')
+    with yaspin(Spinners.dots, text='Generating VASP workflow for NEB calculations...', color='cyan') as sp:
+        result = tools.generate_vasp_workflow_of_neb(initial_poscar_path=initial_poscar_path, final_poscar_path=final_poscar_path, num_images=num_images)
     color_print(result['message'], 'green')
     time.sleep(3)
 
@@ -1506,6 +1516,51 @@ def command_1_4_3():
     print('')
     with yaspin(Spinners.dots, text='Analyzing VASP elastic constants calculations...', color='cyan') as sp:
         result = tools.analyze_vasp_workflow_of_elastic_constants(elastic_constants_dir=elastic_constants_dir)
+    color_print(result['message'], 'green')
+    time.sleep(3)
+
+@register('1.4.4', 'Ab initio molecular dynamics (AIMD) analysis')
+def command_1_4_4():
+    try:
+        while True:
+            aimd_dir = color_input('\nEnter the AIMD simulations directory path that contains MD temperature subdirectories: ', 'yellow').strip()
+
+            if not aimd_dir:
+                continue
+
+            try:
+                os.path.exists(aimd_dir)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid directory: {aimd_dir}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+    
+    try:
+        while True:
+            specie = color_input('\nEnter the atomic specie symbol for MSD calculation (e.g., Li): ', 'yellow').strip()
+
+            if not specie:
+                continue
+
+            try:
+                schemas.CheckElement(element_symbol=specie)
+                schemas.CheckElementExistence(poscar_path=os.path.join(aimd_dir, 'POSCAR'), element_symbol=specie)
+                break
+            except Exception:
+                color_print(f'[Error] Invalid atomic specie symbol: {specie}, please double check and try again.\n', 'red')
+
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+
+    print('')
+    with yaspin(Spinners.dots, text='Analyzing VASP AIMD simulations...', color='cyan') as sp:
+        result = tools.analyze_vasp_workflow_of_aimd(aimd_dir=aimd_dir, specie=specie)
     color_print(result['message'], 'green')
     time.sleep(3)
 

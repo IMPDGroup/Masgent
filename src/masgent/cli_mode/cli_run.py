@@ -854,12 +854,13 @@ def command_1_2_1():
         while True:
             clear_and_print_entry_message()
             choices = [
+                'MPMetalRelaxSet  ->   suggested for metallic structure relaxation',
                 'MPRelaxSet       ->   suggested for structure relaxation',
                 'MPStaticSet      ->   suggested for static calculations',
-                'MPNonSCFSet      ->   suggested for non-self-consistent field calculations',
+                'MPNonSCFBandSet  ->   suggested for non-self-consistent field calculations (Band structure)',
+                'MPNonSCFDOSSet   ->   suggested for non-self-consistent field calculations (Density of States)',
                 'MPScanRelaxSet   ->   suggested for structure relaxation with r2SCAN functional',
                 'MPScanStaticSet  ->   suggested for static calculations with r2SCAN functional',
-                'MVLElasticSet    ->   suggested for elastic constant calculations',
                 'MPMDSet          ->   suggested for molecular dynamics simulations',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
@@ -878,14 +879,20 @@ def command_1_2_1():
                 print_help()
             elif user_input.startswith('Exit'):
                 exit_and_cleanup()
+            elif user_input.startswith('MPMetalRelaxSet'):
+                vasp_input_sets = 'MPMetalRelaxSet'
+                break
             elif user_input.startswith('MPRelaxSet'):
                 vasp_input_sets = 'MPRelaxSet'
                 break
             elif user_input.startswith('MPStaticSet'):
                 vasp_input_sets = 'MPStaticSet'
                 break
-            elif user_input.startswith('MPNonSCFSet'):
-                vasp_input_sets = 'MPNonSCFSet'
+            elif user_input.startswith('MPNonSCFBandSet'):
+                vasp_input_sets = 'MPNonSCFBandSet'
+                break
+            elif user_input.startswith('MPNonSCFDOSSet'):
+                vasp_input_sets = 'MPNonSCFDOSSet'
                 break
             elif user_input.startswith('MPScanRelaxSet'):
                 vasp_input_sets = 'MPScanRelaxSet'
@@ -898,9 +905,6 @@ def command_1_2_1():
                 break
             elif user_input.startswith('NEBSet'):
                 vasp_input_sets = 'NEBSet'
-                break
-            elif user_input.startswith('MVLElasticSet'):
-                vasp_input_sets = 'MVLElasticSet'
                 break
             else:
                 continue
@@ -925,12 +929,13 @@ def command_1_2_2():
         while True:
             clear_and_print_entry_message()
             choices = [
+                'MPMetalRelaxSet  ->   suggested for metallic structure relaxation',
                 'MPRelaxSet       ->   suggested for structure relaxation',
                 'MPStaticSet      ->   suggested for static calculations',
-                'MPNonSCFSet      ->   suggested for non-self-consistent field calculations',
+                'MPNonSCFBandSet  ->   suggested for non-self-consistent field calculations (Band structure)',
+                'MPNonSCFDOSSet   ->   suggested for non-self-consistent field calculations (Density of States)',
                 'MPScanRelaxSet   ->   suggested for structure relaxation with r2SCAN functional',
                 'MPScanStaticSet  ->   suggested for static calculations with r2SCAN functional',
-                'MVLElasticSet    ->   suggested for elastic constant calculations',
                 'MPMDSet          ->   suggested for molecular dynamics simulations',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
@@ -949,14 +954,20 @@ def command_1_2_2():
                 print_help()
             elif user_input.startswith('Exit'):
                 exit_and_cleanup()
+            elif user_input.startswith('MPMetalRelaxSet'):
+                vasp_input_sets = 'MPMetalRelaxSet'
+                break
             elif user_input.startswith('MPRelaxSet'):
                 vasp_input_sets = 'MPRelaxSet'
                 break
             elif user_input.startswith('MPStaticSet'):
                 vasp_input_sets = 'MPStaticSet'
                 break
-            elif user_input.startswith('MPNonSCFSet'):
-                vasp_input_sets = 'MPNonSCFSet'
+            elif user_input.startswith('MPNonSCFBandSet'):
+                vasp_input_sets = 'MPNonSCFBandSet'
+                break
+            elif user_input.startswith('MPNonSCFDOSSet'):
+                vasp_input_sets = 'MPNonSCFDOSSet'
                 break
             elif user_input.startswith('MPScanRelaxSet'):
                 vasp_input_sets = 'MPScanRelaxSet'
@@ -969,9 +980,6 @@ def command_1_2_2():
                 break
             elif user_input.startswith('NEBSet'):
                 vasp_input_sets = 'NEBSet'
-                break
-            elif user_input.startswith('MVLElasticSet'):
-                vasp_input_sets = 'MVLElasticSet'
                 break
             else:
                 continue

@@ -15,6 +15,7 @@ from pymatgen.io.vasp import Poscar, Kpoints, Vasprun
 from pymatgen.io.vasp.sets import (
     MPStaticSet, 
     MPRelaxSet, 
+    MPMetalRelaxSet,
     MPNonSCFSet, 
     MPScanRelaxSet, 
     MPScanStaticSet,
@@ -216,7 +217,7 @@ def generate_vasp_poscar(formula: str) -> dict:
 
 @with_metadata(schemas.ToolMetadata(
     name='Generate VASP Inputs (INCAR, KPOINTS, POTCAR, POSCAR)',
-    description='Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets (MPRelaxSet, MPStaticSet, MPNonSCFSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet, MVLElasticSet).',
+    description='Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets (MPMetalRelaxSet, MPRelaxSet, MPStaticSet, MPNonSCFBandSet, MPNonSCFDOSSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet).',
     requires=['vasp_input_sets'],
     optional=['poscar_path', 'only_incar'],
     defaults={
@@ -246,12 +247,13 @@ def generate_vasp_inputs_from_poscar(
         }
 
     VIS_MAP = {
+        'MPMetalRelaxSet': MPMetalRelaxSet,
         'MPRelaxSet': MPRelaxSet,
         'MPStaticSet': MPStaticSet,
-        'MPNonSCFSet': MPNonSCFSet,
+        'MPNonSCFBandSet': MPNonSCFSet,
+        'MPNonSCFDOSSet': MPNonSCFSet,
         'MPScanRelaxSet': MPScanRelaxSet,
         'MPScanStaticSet': MPScanStaticSet,
-        'MVLElasticSet': MVLElasticSet,
         'MPMDSet': MPMDSet,
     }
     vis_class = VIS_MAP[vasp_input_sets]
@@ -263,7 +265,13 @@ def generate_vasp_inputs_from_poscar(
         os.makedirs(vasp_inputs_dir, exist_ok=True)
 
         structure = Structure.from_file(poscar_path)
-        vis = vis_class(structure)
+        
+        if vasp_input_sets == 'MPRelaxSet':
+            vis = vis_class(structure, user_incar_settings={'ISMEAR': 0})
+        elif vasp_input_sets == 'MPNonSCFDOSSet':
+            vis = vis_class(structure, mode='uniform', nedos=5000)
+        else:
+            vis = vis_class(structure)
 
         if only_incar:
             vis.incar.write_file(os.path.join(vasp_inputs_dir, 'INCAR'))
@@ -1305,7 +1313,7 @@ def generate_vasp_workflow_of_elastic_constants(
             deformed_lattice = Lattice(F @ structure.lattice.matrix)
             deformed_structure.lattice = deformed_lattice
 
-            vis = MVLElasticSet(deformed_structure)
+            vis = MVLElasticSet(deformed_structure, user_incar_settings={'EDIFF': 1E-6, 'ISIF': 2, 'IBRION': -1, 'NSW': 0, 'NFREE': 0, 'POTIM': 'none'})
             deform_dir = os.path.join(elastic_dir, folder_name)
             os.makedirs(deform_dir, exist_ok=True)
             vis.incar.write_file(os.path.join(deform_dir, 'INCAR'))
@@ -1386,7 +1394,7 @@ def generate_vasp_workflow_of_aimd(
             temp_dir = os.path.join(aimd_dir, f'T_{temperature}K')
             os.makedirs(temp_dir, exist_ok=True)
 
-            vis = MPMDSet(structure, user_incar_settings={'SMASS': 0, 'IBRION': 0, 'TEBEG': temperature, 'TEEND': temperature, 'NSW': md_steps, 'POTIM': md_timestep})
+            vis = MPMDSet(structure, start_temp=temperature, end_temp=temperature, nsteps=md_steps, time_step=md_timestep)
             vis.incar.write_file(os.path.join(temp_dir, 'INCAR'))
             vis.poscar.write_file(os.path.join(temp_dir, 'POSCAR'))
             vis.kpoints.write_file(os.path.join(temp_dir, 'KPOINTS'))

@@ -48,7 +48,15 @@ Masgent is a materials simulation AI agent that streamlines **DFT workflows and 
   
   - 1.2 VASP Input File Preparation
     - 1.2.1 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)
-    - 1.2.2 Generate INCAR templates (relaxation, static, etc.)
+    - 1.2.2 Generate INCAR templates
+      - MPMetalRelaxSet: suggested for metallic structure relaxation
+      - MPRelaxSet: suggested for structure relaxation
+      - MPStaticSet: suggested for static calculations
+      - MPNonSCFBandSet: suggested for non-self-consistent field calculations (Band structure)
+      - MPNonSCFDOSSet: suggested for non-self-consistent field calculations (Density of States)
+      - MPScanRelaxSet: suggested for structure relaxation with r2SCAN functional
+      - MPScanStaticSet: suggested for static calculations with r2SCAN functional
+      - MPMDSet: suggested for molecular dynamics simulations
     - 1.2.3 Generate KPOINTS with specified accuracy
     - 1.2.4 Generate HPC job submission script
   

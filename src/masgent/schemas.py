@@ -282,8 +282,8 @@ class GenerateVaspInputsFromPoscar(BaseModel):
     )
 
     vasp_input_sets: Literal[
-        'MPMetalRelaxSet', 'MPRelaxSet', 'MPStaticSet', 'MPNonSCFBandSet', 'MPNonSCFDOSSet',
-        'MPScanRelaxSet', 'MPScanStaticSet', 'MPMDSet'
+        'MPMetalRelaxSet', 'MPRelaxSet', 'MPStaticSet',
+        'MPNonSCFBandSet', 'MPNonSCFDOSSet', 'MPMDSet'
         ] = Field(
             ...,
             description='Type of Pymatgen VASP input set class to use. Must be one of the supported types.'

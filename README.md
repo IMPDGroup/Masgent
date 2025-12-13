@@ -54,8 +54,6 @@ Masgent is a materials simulation AI agent that streamlines **DFT workflows and 
       - MPStaticSet: suggested for static calculations
       - MPNonSCFBandSet: suggested for non-self-consistent field calculations (Band structure)
       - MPNonSCFDOSSet: suggested for non-self-consistent field calculations (Density of States)
-      - MPScanRelaxSet: suggested for structure relaxation with r2SCAN functional
-      - MPScanStaticSet: suggested for static calculations with r2SCAN functional
       - MPMDSet: suggested for molecular dynamics simulations
     - 1.2.3 Generate KPOINTS with specified accuracy
     - 1.2.4 Generate HPC job submission script

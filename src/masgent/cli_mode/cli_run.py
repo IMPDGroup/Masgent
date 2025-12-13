@@ -859,8 +859,6 @@ def command_1_2_1():
                 'MPStaticSet      ->   suggested for static calculations',
                 'MPNonSCFBandSet  ->   suggested for non-self-consistent field calculations (Band structure)',
                 'MPNonSCFDOSSet   ->   suggested for non-self-consistent field calculations (Density of States)',
-                'MPScanRelaxSet   ->   suggested for structure relaxation with r2SCAN functional',
-                'MPScanStaticSet  ->   suggested for static calculations with r2SCAN functional',
                 'MPMDSet          ->   suggested for molecular dynamics simulations',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
@@ -894,17 +892,8 @@ def command_1_2_1():
             elif user_input.startswith('MPNonSCFDOSSet'):
                 vasp_input_sets = 'MPNonSCFDOSSet'
                 break
-            elif user_input.startswith('MPScanRelaxSet'):
-                vasp_input_sets = 'MPScanRelaxSet'
-                break
-            elif user_input.startswith('MPScanStaticSet'):
-                vasp_input_sets = 'MPScanStaticSet'
-                break
             elif user_input.startswith('MPMDSet'):
                 vasp_input_sets = 'MPMDSet'
-                break
-            elif user_input.startswith('NEBSet'):
-                vasp_input_sets = 'NEBSet'
                 break
             else:
                 continue
@@ -934,8 +923,6 @@ def command_1_2_2():
                 'MPStaticSet      ->   suggested for static calculations',
                 'MPNonSCFBandSet  ->   suggested for non-self-consistent field calculations (Band structure)',
                 'MPNonSCFDOSSet   ->   suggested for non-self-consistent field calculations (Density of States)',
-                'MPScanRelaxSet   ->   suggested for structure relaxation with r2SCAN functional',
-                'MPScanStaticSet  ->   suggested for static calculations with r2SCAN functional',
                 'MPMDSet          ->   suggested for molecular dynamics simulations',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
@@ -968,12 +955,6 @@ def command_1_2_2():
                 break
             elif user_input.startswith('MPNonSCFDOSSet'):
                 vasp_input_sets = 'MPNonSCFDOSSet'
-                break
-            elif user_input.startswith('MPScanRelaxSet'):
-                vasp_input_sets = 'MPScanRelaxSet'
-                break
-            elif user_input.startswith('MPScanStaticSet'):
-                vasp_input_sets = 'MPScanStaticSet'
                 break
             elif user_input.startswith('MPMDSet'):
                 vasp_input_sets = 'MPMDSet'
@@ -1561,7 +1542,10 @@ def command_1_4_4():
 
             try:
                 schemas.CheckElement(element_symbol=specie)
-                schemas.CheckElementExistence(poscar_path=os.path.join(aimd_dir, 'POSCAR'), element_symbol=specie)
+                for root, dirs, files in os.walk(aimd_dir):
+                    if 'POSCAR' in files:
+                        poscar_path = os.path.join(root, 'POSCAR')
+                        schemas.CheckElementExistence(poscar_path=poscar_path, element_symbol=specie)
                 break
             except Exception:
                 color_print(f'[Error] Invalid atomic specie symbol: {specie}, please double check and try again.\n', 'red')

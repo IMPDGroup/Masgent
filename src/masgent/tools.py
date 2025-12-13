@@ -217,7 +217,7 @@ def generate_vasp_poscar(formula: str) -> dict:
 
 @with_metadata(schemas.ToolMetadata(
     name='Generate VASP Inputs (INCAR, KPOINTS, POTCAR, POSCAR)',
-    description='Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets (MPMetalRelaxSet, MPRelaxSet, MPStaticSet, MPNonSCFBandSet, MPNonSCFDOSSet, MPScanRelaxSet, MPScanStaticSet, MPMDSet).',
+    description='Generate VASP input files (INCAR, KPOINTS, POTCAR, POSCAR) from a given POSCAR file using pymatgen input sets (MPMetalRelaxSet, MPRelaxSet, MPStaticSet, MPNonSCFBandSet, MPNonSCFDOSSet, MPMDSet).',
     requires=['vasp_input_sets'],
     optional=['poscar_path', 'only_incar'],
     defaults={
@@ -252,8 +252,6 @@ def generate_vasp_inputs_from_poscar(
         'MPStaticSet': MPStaticSet,
         'MPNonSCFBandSet': MPNonSCFSet,
         'MPNonSCFDOSSet': MPNonSCFSet,
-        'MPScanRelaxSet': MPScanRelaxSet,
-        'MPScanStaticSet': MPScanStaticSet,
         'MPMDSet': MPMDSet,
     }
     vis_class = VIS_MAP[vasp_input_sets]
@@ -1313,7 +1311,7 @@ def generate_vasp_workflow_of_elastic_constants(
             deformed_lattice = Lattice(F @ structure.lattice.matrix)
             deformed_structure.lattice = deformed_lattice
 
-            vis = MVLElasticSet(deformed_structure, user_incar_settings={'EDIFF': 1E-6, 'ISIF': 2, 'IBRION': -1, 'NSW': 0, 'NFREE': 0, 'POTIM': 'none'})
+            vis = MPStaticSet(deformed_structure, user_incar_settings={'EDIFF': 1E-6, 'ISMEAR': 1}, reciprocal_density=500)
             deform_dir = os.path.join(elastic_dir, folder_name)
             os.makedirs(deform_dir, exist_ok=True)
             vis.incar.write_file(os.path.join(deform_dir, 'INCAR'))
@@ -1796,107 +1794,164 @@ def analyze_vasp_workflow_of_aimd(
             'message': f'Invalid input parameters: {str(e)}'
         }
     
-    runs_dir = aimd_dir
-    vasprun = Vasprun(os.path.join(runs_dir, 'vasprun.xml'))
+    def analyze_subdir(vasprun, folder_path):
+        # Energy vs Time
+        steps = vasprun.ionic_steps
+        E_fr = np.array([s["e_fr_energy"] for s in steps])      # free energy
+        POTIM = vasprun.parameters["POTIM"]                     # time in fs
+        time_ps = np.arange(len(steps)) * POTIM / 1000.0        # time in ps
+        fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+        ax = plt.subplot()
+        ax.plot(time_ps, E_fr, label='Free Energy')
+        ax.set_xlabel('Time (ps)')
+        ax.set_ylabel('Energy (eV)')
+        ax.legend(frameon=True, loc='upper right')
+        ax.set_title('Masgent AIMD Free Energy vs Time')
+        plt.savefig(f'{folder_path}/aimd_energy.png')
+        plt.close()
 
+
+        try:
+            diff = DiffusionAnalyzer.from_vaspruns(vaspruns=[vasprun], specie=specie)
+
+            # Plot Direction-resolved MSD
+            fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+            ax = plt.subplot()
+            ax.plot(diff.dt, diff.msd, label='Total')
+            ax.plot(diff.dt, diff.msd_components[:, 0], label='X')
+            ax.plot(diff.dt, diff.msd_components[:, 1], label='Y')
+            ax.plot(diff.dt, diff.msd_components[:, 2], label='Z')
+            ax.set_xlabel('Time (fs)')
+            ax.set_ylabel('Mean Squared Displacement (Å²)')
+            ax.legend(frameon=True, loc='upper right')
+            ax.set_title('Masgent AIMD Direction-resolved MSD vs Time')
+            plt.savefig(f'{folder_path}/aimd_msd_directions.png', dpi=330)
+            plt.close()
+
+            # Save Direction-resolved MSD data to CSV
+            msd_data = pd.DataFrame({
+                'Time (fs)': diff.dt,
+                'MSD Total (Å²)': diff.msd,
+                'MSD X (Å²)': diff.msd_components[:, 0],
+                'MSD Y (Å²)': diff.msd_components[:, 1],
+                'MSD Z (Å²)': diff.msd_components[:, 2],
+            })
+            msd_data.to_csv(f'{folder_path}/aimd_msd_directions.csv', index=False, float_format='%.6f')
+
+            # Plot species-resolved MSD
+            fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+            ax = plt.subplot()
+            msd_species_data = {'Time (fs)': diff.dt}
+            for sp in sorted(diff.structure.composition.keys()):
+                indices = [i for i, site in enumerate(diff.structure) if site.specie == sp]
+                sd = np.average(diff.sq_disp_ions[indices, :], axis=0)
+                msd_species_data[f'MSD {sp} (Å²)'] = sd
+                ax.plot(diff.dt, sd, label=str(sp))
+            ax.set_xlabel('Time (fs)')
+            ax.set_ylabel('Mean Squared Displacement (Å²)')
+            ax.legend(frameon=True, loc='upper right')
+            ax.set_title('Masgent AIMD Species-resolved MSD vs Time')
+            plt.savefig(f'{folder_path}/aimd_msd_species.png', dpi=330)
+            plt.close()
+
+            # Save species-resolved MSD data to CSV
+            msd_species_df = pd.DataFrame(msd_species_data)
+            msd_species_df.to_csv(f'{folder_path}/aimd_msd_species.csv', index=False, float_format='%.6f')
+
+            # Get diffusivity and conductivity
+            diffusivity = diff.diffusivity # in cm^2/s
+            conductivity = diff.conductivity # in mS/cm
+            with open(f'{folder_path}/aimd_diffusion_properties.txt', 'w') as f:
+                f.write(f'# Diffusivity and Conductivity calculated by Masgent\n')
+                f.write(f'Diffusivity (cm^2/s): {diffusivity:.6e}\n')
+                f.write(f'Conductivity (mS/cm): {conductivity:.6e}\n')
+            
+            return diffusivity, conductivity
+        
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Failed to analyze AIMD diffusion properties in {folder_path}: {str(e)}'
+            }
+
+    runs_dir = aimd_dir
+    # vasprun = Vasprun(os.path.join(runs_dir, 'vasprun.xml'))
     import matplotlib
     matplotlib.use('Agg')  # Use non-interactive backend for plotting
     import matplotlib.pyplot as plt
     import seaborn as sns
+    from pymatgen.analysis.diffusion.analyzer import DiffusionAnalyzer
 
     sns.set_theme(font_scale=1.2, style='whitegrid')
     matplotlib.rcParams['xtick.direction'] = 'in'
     matplotlib.rcParams['ytick.direction'] = 'in'
 
-    # Energy vs Time
-    steps = vasprun.ionic_steps
-    E_fr = np.array([s["e_fr_energy"] for s in steps])      # free energy
-    POTIM = vasprun.parameters["POTIM"]                     # time in fs
-    time_ps = np.arange(len(steps)) * POTIM / 1000.0        # time in ps
-    fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-    ax = plt.subplot()
-    ax.plot(time_ps, E_fr, label='Free Energy')
-    ax.set_xlabel('Time (ps)')
-    ax.set_ylabel('Energy (eV)')
-    ax.legend(frameon=True, loc='upper right')
-    ax.set_title('Masgent AIMD Free Energy vs Time')
-    plt.savefig(f'{runs_dir}/aimd_energy.png')
-    plt.close()
-
-    from pymatgen.analysis.diffusion.analyzer import DiffusionAnalyzer
-
-    try:
-        diff = DiffusionAnalyzer.from_vaspruns(vaspruns=[vasprun], specie=specie)
-
-        # Plot Direction-resolved MSD
-        fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-        ax = plt.subplot()
-        ax.plot(diff.dt, diff.msd, label='Total')
-        ax.plot(diff.dt, diff.msd_components[:, 0], label='X')
-        ax.plot(diff.dt, diff.msd_components[:, 1], label='Y')
-        ax.plot(diff.dt, diff.msd_components[:, 2], label='Z')
-        ax.set_xlabel('Time (fs)')
-        ax.set_ylabel('Mean Squared Displacement (Å²)')
-        ax.legend(frameon=True, loc='upper right')
-        ax.set_title('Masgent AIMD Direction-resolved MSD vs Time')
-        plt.savefig(f'{runs_dir}/aimd_msd_directions.png', dpi=330)
-        plt.close()
-
-        # Save Direction-resolved MSD data to CSV
-        msd_data = pd.DataFrame({
-            'Time (fs)': diff.dt,
-            'MSD Total (Å²)': diff.msd,
-            'MSD X (Å²)': diff.msd_components[:, 0],
-            'MSD Y (Å²)': diff.msd_components[:, 1],
-            'MSD Z (Å²)': diff.msd_components[:, 2],
-        })
-        msd_data.to_csv(f'{runs_dir}/aimd_msd_directions.csv', index=False, float_format='%.6f')
-
-        # Plot species-resolved MSD
-        fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-        ax = plt.subplot()
-        msd_species_data = {'Time (fs)': diff.dt}
-        for sp in sorted(diff.structure.composition.keys()):
-            indices = [i for i, site in enumerate(diff.structure) if site.specie == sp]
-            sd = np.average(diff.sq_disp_ions[indices, :], axis=0)
-            msd_species_data[f'MSD {sp} (Å²)'] = sd
-            ax.plot(diff.dt, sd, label=str(sp))
-        ax.set_xlabel('Time (fs)')
-        ax.set_ylabel('Mean Squared Displacement (Å²)')
-        ax.legend(frameon=True, loc='upper right')
-        ax.set_title('Masgent AIMD Species-resolved MSD vs Time')
-        plt.savefig(f'{runs_dir}/aimd_msd_species.png', dpi=330)
-        plt.close()
-
-        # Save species-resolved MSD data to CSV
-        msd_species_df = pd.DataFrame(msd_species_data)
-        msd_species_df.to_csv(f'{runs_dir}/aimd_msd_species.csv', index=False, float_format='%.6f')
-
-        # Get diffusivity and conductivity
-        diffusivity = diff.diffusivity # in cm^2/s
-        conductivity = diff.conductivity # in mS/cm
-        with open(f'{runs_dir}/aimd_diffusion_properties.txt', 'w') as f:
-            f.write(f'# Diffusivity and Conductivity calculated by Masgent\n')
-            f.write(f'Diffusivity (cm^2/s): {diffusivity:.6e}\n')
-            f.write(f'Conductivity (mS/cm): {conductivity:.6e}\n')
-
+    T_list, D_list, C_list = [], [], []
+    for root, dirs, files in os.walk(runs_dir):
+        for file in files:
+            if file == 'vasprun.xml':
+                vasprun_path = os.path.join(root, file)
+                vasprun = Vasprun(vasprun_path)
+                folder_path = os.path.abspath(root)
+                temperature = int(os.path.basename(root)[2:-1])
+                T_list.append(temperature)
+                D, C = analyze_subdir(vasprun, folder_path)
+                D_list.append(D)
+                C_list.append(C)
+    
+    # Count number of successful analyses to proceed with Arrhenius plot
+    successful_analyses = len(D_list)
+    if successful_analyses < 2:
         return {
             'status': 'success',
-            'message': f'Analyzed VASP workflow of AIMD simulations in {runs_dir}.',
+            'message': f'Not enough successful AIMD analyses to generate Arrhenius plot in {runs_dir}. At least 2 are required. Skipped Arrhenius plot generation.',
             'aimd_dir': runs_dir,
-            'aimd_energy_plot': f'{runs_dir}/aimd_energy.png',
-            'aimd_msd_directions_plot': f'{runs_dir}/aimd_msd_directions.png',
-            'aimd_msd_directions_csv': f'{runs_dir}/aimd_msd_directions.csv',
-            'aimd_msd_species_plot': f'{runs_dir}/aimd_msd_species.png',
-            'aimd_msd_species_csv': f'{runs_dir}/aimd_msd_species.csv',
-            'aimd_diffusion_properties_txt': f'{runs_dir}/aimd_diffusion_properties.txt',
         }
 
-    except Exception as e:
-        return {
-            'status': 'error',
-            'message': f'Failed to analyze AIMD diffusion properties: {str(e)}'
-        }
+    # Plot Arrhenius plot (ax1: 1000/T vs log10(D); ax2: 1000/T vs log10(C) and fitting line)
+    fig, ax = plt.subplots(2, 1, figsize=(13, 12), sharex=False, sharey=False, constrained_layout=True)
+    inv_T = [1000.0 / T for T in T_list]
+    log_D = [np.log10(D) for D in D_list]
+    log_C = [np.log10(C) for C in C_list]
+    ax[0].scatter(inv_T, log_D, color='C0', label='Diffusivity Data')
+    ax[1].scatter(inv_T, log_C, color='C0', label='Conductivity Data')
+    # Fit line for diffusivity
+    coeffs_D = np.polyfit(inv_T, log_D, 1)
+    fit_line_D = np.poly1d(coeffs_D)
+    ax[0].plot(sorted(inv_T), fit_line_D(sorted(inv_T)), color='C3', label='Diffusivity Fit')
+    # Fit line for conductivity
+    coeffs_C = np.polyfit(inv_T, log_C, 1)
+    fit_line_C = np.poly1d(coeffs_C)
+    ax[1].plot(sorted(inv_T), fit_line_C(sorted(inv_T)), color='C3', label='Conductivity Fit')
+    # Labels and titles
+    ax[0].set_xlabel('1000 / T (1/K)', fontsize=14)
+    ax[0].set_ylabel('log10(D) (cm²/s)', fontsize=14)
+    ax[0].legend(frameon=True, loc='upper right')
+    ax[1].set_xlabel('1000 / T (1/K)', fontsize=14)
+    ax[1].set_ylabel('log10(C) (mS/cm)', fontsize=14)
+    ax[1].legend(frameon=True, loc='upper right')
+    # Set overall title
+    fig.suptitle('Masgent AIMD Arrhenius Plot')
+    plt.savefig(f'{runs_dir}/aimd_arrhenius_plot.png', dpi=330)
+    plt.close()
+
+    # Save Arrhenius data to CSV
+    arrhenius_data = pd.DataFrame({
+        'Temperature (K)': T_list,
+        'Diffusivity (cm²/s)': D_list,
+        'Conductivity (mS/cm)': C_list,
+        '1000 / T (1/K)': inv_T,
+        'log10(D) (cm²/s)': log_D,
+    })
+    arrhenius_data.to_csv(f'{runs_dir}/aimd_arrhenius_data.csv', index=False, float_format='%.6f')
+
+    return {
+        'status': 'success',
+        'message': f'Analyzed VASP workflow of AIMD simulations in {runs_dir}.',
+        'aimd_dir': runs_dir,
+        'aimd_arrhenius_plot': f'{runs_dir}/aimd_arrhenius_plot.png',
+        'aimd_arrhenius_data_csv': f'{runs_dir}/aimd_arrhenius_data.csv',
+    }
 
 @with_metadata(schemas.ToolMetadata(
     name='Run simulation using machine learning potentials (MLPs)',

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "masgent"
-version = "1.0.40"
+version = "1.0.41"
 description = "Masgent: Materials Simulation Agent"
 readme = "README_PyPI.md"
 authors = [{name = "Guangchen Liu", email = "gliu4@wpi.edu"}]
@@ -23,7 +23,6 @@ dependencies = [
     "pydantic_ai",
     "pymatgen",
     "pymatgen-analysis-defects",
-    "pymatgen-analysis-diffusion",
     "mp-api",
     "dotenv",
     "colorama",

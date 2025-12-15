@@ -1817,14 +1817,12 @@ def analyze_vasp_workflow_of_aimd(
     matplotlib.use('Agg')  # Use non-interactive backend for plotting
     import matplotlib.pyplot as plt
     import seaborn as sns
-    from pymatgen.core.trajectory import Trajectory
-    from pymatgen.analysis.diffusion.analyzer import DiffusionAnalyzer
 
     sns.set_theme(font_scale=1.2, style='whitegrid')
     matplotlib.rcParams['xtick.direction'] = 'in'
     matplotlib.rcParams['ytick.direction'] = 'in'
 
-    DC_data = []
+    D_data= []
     for root, dirs, files in os.walk(runs_dir):
         for dir_name in dirs:
             if dir_name.startswith('T_') and dir_name.endswith('K'):
@@ -1853,48 +1851,94 @@ def analyze_vasp_workflow_of_aimd(
                 T_E_df = pd.DataFrame(T_E_data, columns=['Temperature (K)', 'Energy (eV)'])
                 T_E_df.to_csv(f'{folder_path}/aimd_temperature_energy.csv', index=False, float_format='%.6f')
                 
-                # Plot N vs Temperature and Energy
+                # Plot Time vs Temperature and Energy
+                time = np.arange(len(T_E_df)) * POTIM / 1000  # Convert to ps
                 fig, ax = plt.subplots(2, 1, figsize=(8, 6), constrained_layout=True, sharex=True)
-                ax[0].plot(range(len(T_E_df)), T_E_df['Temperature (K)'], color='C0', label='Temperature')
-                ax[0].hlines(temperature, 0, len(T_E_df), colors='C3', linestyles='dashed', label='Target Temperature')
+                ax[0].plot(time, T_E_df['Temperature (K)'], color='C0', label='Temperature', linewidth=1.0)
+                ax[0].hlines(temperature, 0, time[-1], colors='C3', linestyles='dashed', label='Target Temperature')
                 ax[0].set_ylabel('Temperature (K)')
-                ax[0].set_xlabel('MD Steps')
                 ax[0].set_title(f'Masgent AIMD Temperature & Energy at {temperature} K')
                 ax[0].legend(frameon=True, loc='upper right')
-                ax[1].plot(range(len(T_E_df)), T_E_df['Energy (eV)'], color='C1', label='Energy')
+                ax[1].plot(time, T_E_df['Energy (eV)'], color='C1', label='Energy', linewidth=1.0)
                 ax[1].set_ylabel('Energy (eV)')
-                ax[1].set_xlabel('MD Steps')
+                ax[1].set_xlabel('Time (ps)')
                 ax[1].legend(frameon=True, loc='upper right')
                 plt.savefig(f'{folder_path}/aimd_temperature_energy.png', dpi=330)
                 plt.close()
 
                 # Parse MSD, diffusion coefficient, and conductivity from XDATCAR
                 xdatcar_path = os.path.join(folder_path, 'XDATCAR')
-                traj = Trajectory.from_file(xdatcar_path)
-                try:
-                    diff = DiffusionAnalyzer.from_structures(structures=traj, specie=specie, temperature=temperature, time_step=POTIM, step_skip=1)
-                except Exception as e:
-                    return {
-                        'status': 'error',
-                        'message': f'Error in diffusion analysis for AIMD simulation at {temperature} K: {str(e)}'
-                    }
-                diff.export_msdt(f'{folder_path}/aimd_msd.csv')
-
-                # Plot Time vs MSD
-                msd_df = pd.read_csv(f'{folder_path}/aimd_msd.csv', header=None)
+                traj = read(xdatcar_path, index=':')
+                indices = [i for i, a in enumerate(traj[0]) if a.symbol == 'Li']
+                positions_all = np.array([traj[i].get_positions() for i in range(len(traj))])
+                cell = traj[0].cell.array
+                unwrapped = positions_all.copy()
+                for i in range(1, len(positions_all)):
+                    delta = positions_all[i] - positions_all[i-1]
+                    delta -= np.round(delta @ np.linalg.inv(cell)) @ cell
+                    unwrapped[i] = unwrapped[i-1] + delta
+                positions = unwrapped[:, indices]
+                positions_x = positions[:, :, 0]
+                positions_y = positions[:, :, 1]
+                positions_z = positions[:, :, 2]
+                msd_x = np.mean((positions_x - positions_x[0])**2, axis=1)
+                msd_y = np.mean((positions_y - positions_y[0])**2, axis=1)
+                msd_z = np.mean((positions_z - positions_z[0])**2, axis=1)
+                msd_total = np.mean(np.sum((positions - positions[0])**2, axis=2), axis=1)
+                time_ps = np.arange(len(msd_total)) * POTIM / 1000  # Convert to ps
+                msd_df = pd.DataFrame({
+                    'Time (ps)': time_ps,
+                    'MSD_x (Å²)': msd_x,
+                    'MSD_y (Å²)': msd_y,
+                    'MSD_z (Å²)': msd_z,
+                    'MSD_total (Å²)': msd_total
+                })
+                msd_df.to_csv(f'{folder_path}/aimd_msd.csv', index=False, float_format='%.6f')
+                
+                # Plot time vs MSD
                 fig = plt.figure(figsize=(8, 6), constrained_layout=True)
                 ax = plt.subplot()
+                ax.plot(time_ps, msd_x, label='MSD_x', color='C0', linewidth=1.0)
+                ax.plot(time_ps, msd_y, label='MSD_y', color='C1', linewidth=1.0)
+                ax.plot(time_ps, msd_z, label='MSD_z', color='C2', linewidth=1.0)
+                ax.plot(time_ps, msd_total, label='MSD_total', color='C3', linewidth=1.0)
+                ax.set_xlabel('Time (ps)')
+                ax.set_ylabel('Mean Squared Displacement (Å²)')
+                ax.set_title(f'Masgent AIMD Mean Squared Displacement at {temperature} K')
+                ax.legend(frameon=True, loc='upper right')
+                plt.savefig(f'{folder_path}/aimd_msd.png', dpi=330)
+                plt.close()
                 
+                # Calculate diffusion coefficient from linear fit of MSD_total
+                slope, intercept = np.polyfit(time_ps, msd_total, 1)
+                diffusivity = slope / 6 / 1e4  # cm^2/s
+                D_data.append((temperature, diffusivity))
 
+    D_df = pd.DataFrame(D_data, columns=['Temperature (K)', 'Diffusion Coefficient (cm²/s)']).sort_values(by='Temperature (K)')
+    D_df.to_csv(f'{runs_dir}/aimd_diffusion_coefficients.csv', index=False, float_format='%.6e')
 
-                DC_data.append([diff.temperature, diff.diffusivity, diff.conductivity])
-    pd.DataFrame(DC_data, columns=['Temperature (K)', 'Diffusivity (cm^2/s)', 'Conductivity (mS/cm)']).to_csv(f'{runs_dir}/aimd_diffusivity_conductivity.csv', index=False, float_format='%.6f')
-
+    # Plot Arrhenius plot
+    fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+    ax = plt.subplot()
+    D_df['Diffusion Coefficient (cm²/s)'] = D_df['Diffusion Coefficient (cm²/s)'].apply(lambda x: x if x > 0 else 1e-20)
+    logD = np.log10(D_df['Diffusion Coefficient (cm²/s)'])
+    inv_T = 1 / D_df['Temperature (K)']
+    ax.plot(inv_T, logD, 'o', color='C0', label='Data')
+    slope, intercept = np.polyfit(inv_T, logD, 1)
+    ax.plot(inv_T, slope * inv_T + intercept, '-', color='C3', label='Fit', linewidth=1.0)
+    ax.set_xlabel('1 / T $(K^{-1})$')
+    ax.set_ylabel('logD $(cm^2/s)$')
+    ax.set_title('Masgent AIMD Arrhenius Plot of Diffusion Coefficient')
+    ax.legend(frameon=True, loc='upper right')
+    plt.savefig(f'{runs_dir}/aimd_arrhenius_plot.png', dpi=330)
+    plt.close()
 
     return {
         'status': 'success',
         'message': f'Analyzed VASP workflow of AIMD simulations in {runs_dir}.',
         'aimd_dir': runs_dir,
+        'diffusion_coefficients_csv': f'{runs_dir}/aimd_diffusion_coefficients.csv',
+        'arrhenius_plot': f'{runs_dir}/aimd_arrhenius_plot.png',
     }
 
 @with_metadata(schemas.ToolMetadata(

@@ -1495,7 +1495,7 @@ def generate_vasp_workflow_of_neb(
         neb.interpolate()
 
         pmg_images = [Structure.from_ase_atoms(img) for img in images]
-        vis = NEBSet(pmg_images)
+        vis = NEBSet(pmg_images, user_incar_settings={'LCLIMB': True, 'SPRING': -5})
         vis.incar.write_file(os.path.join(neb_dir, 'INCAR'))
         vis.kpoints.write_file(os.path.join(neb_dir, 'KPOINTS'))
         vis.potcar.write_file(os.path.join(neb_dir, 'POTCAR'))
@@ -1510,7 +1510,7 @@ def generate_vasp_workflow_of_neb(
             f.write(scripts)
         
         num_dirs = len(images)
-        padding = len(str(num_dirs - 1))
+        padding = max(2, len(str(num_dirs - 1)))
         for i, image in enumerate(images):
             image_dir = os.path.join(neb_dir, f'{i:0{padding}d}')
             os.makedirs(image_dir, exist_ok=True)

@@ -6,6 +6,134 @@ from pathlib import Path
 from colorama import Fore, Style
 from importlib.metadata import version, PackageNotFoundError
 
+def visualize_structure(poscar_path, save_dir):
+    from pymatgen.core import Structure
+    structure = Structure.from_file(poscar_path)
+    cif_str = structure.to(fmt="cif")
+
+    # Create HTML content
+    html = f'''
+    <html>
+    <head>
+    <script src='https://3Dmol.org/build/3Dmol.js'></script>
+    <style>
+        body {{ 
+            margin: 0; 
+            overflow: hidden; 
+        }}
+
+        #viewer {{
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }}
+
+        .overlay {{
+            position: absolute;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }}
+
+        #title {{ 
+            top: 10px; 
+            right: 10px;
+            font-weight: bold;
+            font-size: 20px;
+        }}
+
+        #legend {{ 
+            top: 10px; 
+            left: 10px; 
+        }}
+
+        #instructions {{ 
+            bottom: 10px; 
+            right: 10px;
+        }}
+
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }}
+
+        .color-box {{
+            width: 20px;
+            height: 20px;
+            margin-right: 6px;
+            border: 1px solid #444;
+            border-radius: 10px;
+        }}
+    </style>
+    </head>
+
+    <body>
+    <div id='viewer'></div>
+
+    <div id='title' class='overlay'>
+        Masgent Structure Viewer (Powered by 3Dmol.js)
+    </div>
+
+    <div id='legend' class='overlay'>
+        <strong>Elements</strong>
+        <div id='legend-items'></div>
+    </div>
+
+    <div id='instructions' class='overlay'>
+        <strong>Instructions:</strong><br>
+        * Drag to rotate<br>
+        * Scroll to zoom<br>
+        * Refresh to reset
+    </div>
+
+    <script>
+        let viewer = $3Dmol.createViewer('viewer', {{ backgroundColor: 'white' }});
+        viewer.addModel(`{cif_str}`, 'cif');
+
+        viewer.setStyle({{}}, {{
+            sphere: {{ scale: 0.4, colorscheme: 'Jmol' }}
+        }});
+
+        viewer.addUnitCell();
+        viewer.zoomTo();
+        viewer.render();
+
+        // ---- Build legend from Jmol colors ----
+        const atoms = viewer.getModel().selectedAtoms();
+        const elements = [...new Set(atoms.map(a => a.elem))].sort();
+
+        const legend = document.getElementById('legend-items');
+        elements.forEach(el => {{
+            const color = $3Dmol.elementColors.Jmol[el] || 0xAAAAAA;
+            const hex = '#' + color.toString(16).padStart(6, '0');
+
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+
+            const box = document.createElement('div');
+            box.className = 'color-box';
+            box.style.background = hex;
+
+            const label = document.createElement('span');
+            label.textContent = el;
+
+            item.appendChild(box);
+            item.appendChild(label);
+            legend.appendChild(item);
+        }});
+    </script>
+    </body>
+    </html>
+    '''
+
+    # Save HTML file
+    with open(f'{save_dir}/OPEN_TO_VIEW_STRUCTURE.html', "w") as f:
+        f.write(html)
+
 def create_deformation_matrices():
     xx = [-0.010, 0.010]
     yy = [-0.010, 0.010]
@@ -224,7 +352,7 @@ def color_input(text, color='cyan'):
 
 def load_system_prompts():
     # src/masgent/ai_mode/system_prompt.txt
-    prompts_path = Path(__file__).resolve().parent / 'ai_mode' / 'system_prompt.txt'
+    prompts_path = Path(__file__).resolve().parent.parent / 'ai_mode' / 'system_prompt.txt'
     try:
         return prompts_path.read_text(encoding='utf-8')
     except Exception as e:

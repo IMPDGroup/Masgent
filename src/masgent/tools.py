@@ -31,6 +31,7 @@ from masgent.utils.utils import (
     list_files_in_dir,
     fit_eos,
     create_deformation_matrices,
+    visualize_structure,
     )
 
 # Track whether Materials Project key has been checked during this process
@@ -1079,6 +1080,45 @@ def generate_interface_from_poscars(
             'status': 'error',
             'message': f'Interface POSCAR generation failed: {str(e)}'
         }
+@with_metadata(schemas.ToolMetadata(
+    name='Visualize Structure from POSCAR',
+    description='Visualize structure from POSCAR using 3Dmol.js',
+    requires=['poscar_path'],
+    optional=[],
+    defaults={},
+    prereqs=[],
+))
+def visualize_structure_from_poscar(poscar_path: str) -> dict:
+    '''
+    Visualize structure from POSCAR using 3Dmol.js
+    '''
+    try:
+        schemas.CheckPoscar(poscar_path=poscar_path)
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Invalid input parameters: {str(e)}'
+        }
+    
+    try:
+        runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
+        
+        vis_dir = os.path.join(runs_dir, 'visualization')
+        os.makedirs(vis_dir, exist_ok=True)
+
+        visualize_structure(poscar_path=poscar_path, save_dir=vis_dir)
+        
+        return {
+            'status': 'success',
+            'message': 'Structure visualization HTML file "OPEN_TO_VIEW_STRUCTURE.html" generated successfully.',
+            'visualization_html_path': f'{vis_dir}/OPEN_TO_VIEW_STRUCTURE.html',
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Structure visualization failed: {str(e)}'
+        }
 
 @with_metadata(schemas.ToolMetadata(
     name='Generate VASP input files and submit bash script for workflow of convergence tests',
@@ -1481,12 +1521,12 @@ def generate_vasp_workflow_of_neb(
         }
     
     try:
-        from ase.mep import NEB
-
         runs_dir = os.environ.get('MASGENT_SESSION_RUNS_DIR')
         
         neb_dir = os.path.join(runs_dir, 'neb_calculations')
         os.makedirs(neb_dir, exist_ok=True)
+
+        from ase.mep import NEB
 
         initial_atoms = read(initial_poscar_path, format='vasp')
         final_atoms = read(final_poscar_path, format='vasp')
@@ -1555,81 +1595,88 @@ def analyze_vasp_workflow_of_convergence_tests(
             'message': f'Invalid input parameters: {str(e)}'
         }
     
-    runs_dir = convergence_tests_dir
+    try:
+        runs_dir = convergence_tests_dir
 
-    # Get all vasprun.xml files in the encut_tests subdirectory
-    encut_tests_dir = os.path.join(runs_dir, 'encut_tests')
-    if os.path.exists(encut_tests_dir):
-        encut_tests_dict = {}
-        for root, dirs, files in os.walk(encut_tests_dir):
-            for file in files:
-                if file == 'vasprun.xml':
-                    vasprun_path = os.path.join(root, file)
-                    vasprun = Vasprun(vasprun_path)
-                    final_energy = vasprun.final_energy
-                    natoms = len(vasprun.atomic_symbols)
-                    final_energy_per_atom = final_energy / natoms
-                    encut_value = int(os.path.basename(root).split('_')[-1])
-                    encut_tests_dict[encut_value] = final_energy_per_atom
+        # Get all vasprun.xml files in the encut_tests subdirectory
+        encut_tests_dir = os.path.join(runs_dir, 'encut_tests')
+        if os.path.exists(encut_tests_dir):
+            encut_tests_dict = {}
+            for root, dirs, files in os.walk(encut_tests_dir):
+                for file in files:
+                    if file == 'vasprun.xml':
+                        vasprun_path = os.path.join(root, file)
+                        vasprun = Vasprun(vasprun_path)
+                        final_energy = vasprun.final_energy
+                        natoms = len(vasprun.atomic_symbols)
+                        final_energy_per_atom = final_energy / natoms
+                        encut_value = int(os.path.basename(root).split('_')[-1])
+                        encut_tests_dict[encut_value] = final_energy_per_atom
 
-    # Get all vasprun.xml files in the kpoint_tests subdirectory
-    kpoint_tests_dir = os.path.join(runs_dir, 'kpoint_tests')
-    if os.path.exists(kpoint_tests_dir):
-        kpoint_tests_dict = {}
-        for root, dirs, files in os.walk(kpoint_tests_dir):
-            for file in files:
-                if file == 'vasprun.xml':
-                    vasprun_path = os.path.join(root, file)
-                    vasprun = Vasprun(vasprun_path)
-                    final_energy = vasprun.final_energy
-                    natoms = len(vasprun.atomic_symbols)
-                    final_energy_per_atom = final_energy / natoms
-                    kpoints_value = int(os.path.basename(root).split('_')[-1])
-                    kpoint_tests_dict[kpoints_value] = final_energy_per_atom
+        # Get all vasprun.xml files in the kpoint_tests subdirectory
+        kpoint_tests_dir = os.path.join(runs_dir, 'kpoint_tests')
+        if os.path.exists(kpoint_tests_dir):
+            kpoint_tests_dict = {}
+            for root, dirs, files in os.walk(kpoint_tests_dir):
+                for file in files:
+                    if file == 'vasprun.xml':
+                        vasprun_path = os.path.join(root, file)
+                        vasprun = Vasprun(vasprun_path)
+                        final_energy = vasprun.final_energy
+                        natoms = len(vasprun.atomic_symbols)
+                        final_energy_per_atom = final_energy / natoms
+                        kpoints_value = int(os.path.basename(root).split('_')[-1])
+                        kpoint_tests_dict[kpoints_value] = final_energy_per_atom
 
-    # Plot the results: Final Energy per Atom vs Encut and Kpoints
-    import matplotlib
-    matplotlib.use('Agg')  # Use non-interactive backend for plotting
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+        # Plot the results: Final Energy per Atom vs Encut and Kpoints
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend for plotting
+        import matplotlib.pyplot as plt
+        import seaborn as sns
 
-    sns.set_theme(font_scale=1.2, style='whitegrid')
-    matplotlib.rcParams['xtick.direction'] = 'in'
-    matplotlib.rcParams['ytick.direction'] = 'in'
+        sns.set_theme(font_scale=1.2, style='whitegrid')
+        matplotlib.rcParams['xtick.direction'] = 'in'
+        matplotlib.rcParams['ytick.direction'] = 'in'
 
-    # Plot Encut tests
-    if encut_tests_dict:
-        fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-        ax = plt.subplot()
-        encut_values = sorted(encut_tests_dict.keys())
-        encut_energies = [encut_tests_dict[encut] for encut in encut_values]
-        ax.plot(encut_values, encut_energies, marker='o')
-        ax.set_xlabel('ENCUT (eV)')
-        ax.set_ylabel('Energy (eV/atom)')
-        ax.set_title('Masgent ENCUT Convergence Test')
-        plt.savefig(f'{runs_dir}/encut_tests.png', dpi=330)
-        plt.close()
+        # Plot Encut tests
+        if encut_tests_dict:
+            fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+            ax = plt.subplot()
+            encut_values = sorted(encut_tests_dict.keys())
+            encut_energies = [encut_tests_dict[encut] for encut in encut_values]
+            ax.plot(encut_values, encut_energies, marker='o')
+            ax.set_xlabel('ENCUT (eV)')
+            ax.set_ylabel('Energy (eV/atom)')
+            ax.set_title('Masgent ENCUT Convergence Test')
+            plt.savefig(f'{runs_dir}/encut_tests.png', dpi=330)
+            plt.close()
 
-    # Plot Kpoint tests
-    if kpoint_tests_dict:
-        fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-        ax = plt.subplot()
-        kpoint_values = sorted(kpoint_tests_dict.keys())
-        kpoint_energies = [kpoint_tests_dict[kp] for kp in kpoint_values]
-        ax.plot(kpoint_values, kpoint_energies, marker='o')
-        ax.set_xlabel('Kpoints Per Atom (kppa)')
-        ax.set_ylabel('Energy (eV/atom)')
-        ax.set_title('Masgent Kpoint Convergence Test')
-        plt.savefig(f'{runs_dir}/kpoint_tests.png', dpi=330)
-        plt.close()
+        # Plot Kpoint tests
+        if kpoint_tests_dict:
+            fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+            ax = plt.subplot()
+            kpoint_values = sorted(kpoint_tests_dict.keys())
+            kpoint_energies = [kpoint_tests_dict[kp] for kp in kpoint_values]
+            ax.plot(kpoint_values, kpoint_energies, marker='o')
+            ax.set_xlabel('Kpoints Per Atom (kppa)')
+            ax.set_ylabel('Energy (eV/atom)')
+            ax.set_title('Masgent Kpoint Convergence Test')
+            plt.savefig(f'{runs_dir}/kpoint_tests.png', dpi=330)
+            plt.close()
 
-    return {
-        'status': 'success',
-        'message': f'Analyzed VASP workflow of convergence tests in {runs_dir}.',
-        'convergence_tests_dir': runs_dir,
-        'encut_tests_plot': f'{runs_dir}/encut_tests.png' if encut_tests_dict else None,
-        'kpoint_tests_plot': f'{runs_dir}/kpoint_tests.png' if kpoint_tests_dict else None,
-    }
+        return {
+            'status': 'success',
+            'message': f'Analyzed VASP workflow of convergence tests in {runs_dir}.',
+            'convergence_tests_dir': runs_dir,
+            'encut_tests_plot': f'{runs_dir}/encut_tests.png' if encut_tests_dict else None,
+            'kpoint_tests_plot': f'{runs_dir}/kpoint_tests.png' if kpoint_tests_dict else None,
+        }
+
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Error analyzing VASP convergence tests workflow: {str(e)}'
+        }
 
 @with_metadata(schemas.ToolMetadata(
     name='Analyze VASP workflow of equation of state (EOS) calculations',
@@ -1653,53 +1700,60 @@ def analyze_vasp_workflow_of_eos(
             'message': f'Invalid input parameters: {str(e)}'
         }
     
-    runs_dir = eos_dir
+    try:
+        runs_dir = eos_dir
 
-    volumes = []
-    energies = []
+        volumes = []
+        energies = []
 
-    for root, dirs, files in os.walk(runs_dir):
-        for file in files:
-            if file == 'vasprun.xml':
-                vasprun_path = os.path.join(root, file)
-                vasprun = Vasprun(vasprun_path)
-                final_energy = vasprun.final_energy
-                natoms = len(vasprun.atomic_symbols)
-                final_energy_per_atom = final_energy / natoms
-                structure = vasprun.final_structure
-                volume = structure.volume / natoms
-                volumes.append(volume)
-                energies.append(final_energy_per_atom)
+        for root, dirs, files in os.walk(runs_dir):
+            for file in files:
+                if file == 'vasprun.xml':
+                    vasprun_path = os.path.join(root, file)
+                    vasprun = Vasprun(vasprun_path)
+                    final_energy = vasprun.final_energy
+                    natoms = len(vasprun.atomic_symbols)
+                    final_energy_per_atom = final_energy / natoms
+                    structure = vasprun.final_structure
+                    volume = structure.volume / natoms
+                    volumes.append(volume)
+                    energies.append(final_energy_per_atom)
 
-    import matplotlib
-    matplotlib.use('Agg')  # Use non-interactive backend for plotting
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend for plotting
+        import matplotlib.pyplot as plt
+        import seaborn as sns
 
-    volumes_fit, energies_fit = fit_eos(volumes, energies)
-    eos_fit_df = pd.DataFrame({'Volume[Å³]': volumes_fit, 'Energy[eV/atom]': energies_fit})
-    eos_fit_df.to_csv(f'{runs_dir}/eos_fit.csv', index=False, float_format='%.8f')
-    sns.set_theme(font_scale=1.2, style='whitegrid')
-    matplotlib.rcParams['xtick.direction'] = 'in'
-    matplotlib.rcParams['ytick.direction'] = 'in'
-    fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-    ax = plt.subplot()
-    ax.scatter(volumes, energies, color='C3', label='Calculated')
-    ax.plot(volumes_fit, energies_fit, color='C0', label='Fitted')
-    ax.set_xlabel('Volume (Å³)', fontsize=14)
-    ax.set_ylabel('Energy (eV/atom)', fontsize=14)
-    ax.set_title('Masgent EOS')
-    ax.legend(frameon=True, loc='upper right')
-    plt.savefig(f'{runs_dir}/eos_curve.png', dpi=330)
-    plt.close()
+        volumes_fit, energies_fit = fit_eos(volumes, energies)
+        eos_fit_df = pd.DataFrame({'Volume[Å³]': volumes_fit, 'Energy[eV/atom]': energies_fit})
+        eos_fit_df.to_csv(f'{runs_dir}/eos_fit.csv', index=False, float_format='%.8f')
+        sns.set_theme(font_scale=1.2, style='whitegrid')
+        matplotlib.rcParams['xtick.direction'] = 'in'
+        matplotlib.rcParams['ytick.direction'] = 'in'
+        fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+        ax = plt.subplot()
+        ax.scatter(volumes, energies, color='C3', label='Calculated')
+        ax.plot(volumes_fit, energies_fit, color='C0', label='Fitted')
+        ax.set_xlabel('Volume (Å³)', fontsize=14)
+        ax.set_ylabel('Energy (eV/atom)', fontsize=14)
+        ax.set_title('Masgent EOS')
+        ax.legend(frameon=True, loc='upper right')
+        plt.savefig(f'{runs_dir}/eos_curve.png', dpi=330)
+        plt.close()
 
-    return {
-        'status': 'success',
-        'message': f'Analyzed VASP workflow of EOS calculations in {runs_dir}.',
-        'eos_dir': runs_dir,
-        'eos_fit_csv': f'{runs_dir}/eos_fit.csv',
-        'eos_curve_plot': f'{runs_dir}/eos_curve.png',
-    }
+        return {
+            'status': 'success',
+            'message': f'Analyzed VASP workflow of EOS calculations in {runs_dir}.',
+            'eos_dir': runs_dir,
+            'eos_fit_csv': f'{runs_dir}/eos_fit.csv',
+            'eos_curve_plot': f'{runs_dir}/eos_curve.png',
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Error analyzing VASP EOS workflow: {str(e)}'
+        }
 
 @with_metadata(schemas.ToolMetadata(
     name='Analyze VASP workflow of elastic constants calculations',
@@ -1723,62 +1777,69 @@ def analyze_vasp_workflow_of_elastic_constants(
             'message': f'Invalid input parameters: {str(e)}'
         }
     
-    runs_dir = elastic_constants_dir
+    try:
+        runs_dir = elastic_constants_dir
 
-    D_all = create_deformation_matrices()
-    strains, stresses = [], []
+        D_all = create_deformation_matrices()
+        strains, stresses = [], []
+        
+        for D_dict in D_all:
+            folder_name = list(D_dict.keys())[0]
+            D = D_dict[folder_name]
+            strains.append(D)
+
+            deform_dir = os.path.join(runs_dir, folder_name)
+            vasprun_path = os.path.join(deform_dir, 'vasprun.xml')
+            if os.path.exists(vasprun_path):
+                vasprun = Vasprun(vasprun_path)
+                stress = vasprun.ionic_steps[-1]['stress'] # in kBar
+                stresses.append(stress)
+
+        # Substract the stress of the undeformed structure
+        eq_stress = stresses[0]
+        strains = strains[1:]
+        stresses = stresses[1:]
+
+        from pymatgen.analysis.elasticity.strain import Strain
+        from pymatgen.analysis.elasticity.stress import Stress
+        from pymatgen.analysis.elasticity.elastic import ElasticTensor
+        
+        pmg_strains = [Strain(eps) for eps in strains]
+        pmg_stresses = [Stress(sig) for sig in stresses]
+        C = ElasticTensor.from_independent_strains(strains=pmg_strains, stresses=pmg_stresses, eq_stress=eq_stress, vasp=True)
+        elastic_constants = C.voigt
+        K_V = C.k_voigt
+        K_R = C.k_reuss
+        K_H = C.k_vrh
+        G_V = C.g_voigt
+        G_R = C.g_reuss
+        G_H = C.g_vrh
+        # Save elastic constants and properties to txt
+        with open(f'{runs_dir}/elastic_constants.txt', 'w') as f:
+            f.write(f'# Elastic constants and moduli calculated by Masgent\n')
+            f.write(f'\nElastic Constants (GPa):\n')
+            for row in elastic_constants:
+                f.write('\t'.join([f'{val:.2f}' for val in row]) + '\n')
+            f.write('\nMechanical Properties (GPa):')
+            f.write(f'\nBulk Modulus (Voigt):\t\t{K_V:.2f}')
+            f.write(f'\nBulk Modulus (Reuss):\t\t{K_R:.2f}')
+            f.write(f'\nBulk Modulus (Hill):\t\t{K_H:.2f}')
+            f.write(f'\nShear Modulus (Voigt):\t\t{G_V:.2f}')
+            f.write(f'\nShear Modulus (Reuss):\t\t{G_R:.2f}')
+            f.write(f'\nShear Modulus (Hill):\t\t{G_H:.2f}')
+
+        return {
+            'status': 'success',
+            'message': f'Analyzed VASP workflow of elastic constants calculations in {runs_dir}.',
+            'elastic_constants_dir': runs_dir,
+            'elastic_constants_txt': f'{runs_dir}/elastic_constants.txt',
+        }
     
-    for D_dict in D_all:
-        folder_name = list(D_dict.keys())[0]
-        D = D_dict[folder_name]
-        strains.append(D)
-
-        deform_dir = os.path.join(runs_dir, folder_name)
-        vasprun_path = os.path.join(deform_dir, 'vasprun.xml')
-        if os.path.exists(vasprun_path):
-            vasprun = Vasprun(vasprun_path)
-            stress = vasprun.ionic_steps[-1]['stress'] # in kBar
-            stresses.append(stress)
-
-    # Substract the stress of the undeformed structure
-    eq_stress = stresses[0]
-    strains = strains[1:]
-    stresses = stresses[1:]
-
-    from pymatgen.analysis.elasticity.strain import Strain
-    from pymatgen.analysis.elasticity.stress import Stress
-    from pymatgen.analysis.elasticity.elastic import ElasticTensor
-    
-    pmg_strains = [Strain(eps) for eps in strains]
-    pmg_stresses = [Stress(sig) for sig in stresses]
-    C = ElasticTensor.from_independent_strains(strains=pmg_strains, stresses=pmg_stresses, eq_stress=eq_stress, vasp=True)
-    elastic_constants = C.voigt
-    K_V = C.k_voigt
-    K_R = C.k_reuss
-    K_H = C.k_vrh
-    G_V = C.g_voigt
-    G_R = C.g_reuss
-    G_H = C.g_vrh
-    # Save elastic constants and properties to txt
-    with open(f'{runs_dir}/elastic_constants.txt', 'w') as f:
-        f.write(f'# Elastic constants and moduli calculated by Masgent\n')
-        f.write(f'\nElastic Constants (GPa):\n')
-        for row in elastic_constants:
-            f.write('\t'.join([f'{val:.2f}' for val in row]) + '\n')
-        f.write('\nMechanical Properties (GPa):')
-        f.write(f'\nBulk Modulus (Voigt):\t\t{K_V:.2f}')
-        f.write(f'\nBulk Modulus (Reuss):\t\t{K_R:.2f}')
-        f.write(f'\nBulk Modulus (Hill):\t\t{K_H:.2f}')
-        f.write(f'\nShear Modulus (Voigt):\t\t{G_V:.2f}')
-        f.write(f'\nShear Modulus (Reuss):\t\t{G_R:.2f}')
-        f.write(f'\nShear Modulus (Hill):\t\t{G_H:.2f}')
-
-    return {
-        'status': 'success',
-        'message': f'Analyzed VASP workflow of elastic constants calculations in {runs_dir}.',
-        'elastic_constants_dir': runs_dir,
-        'elastic_constants_txt': f'{runs_dir}/elastic_constants.txt',
-    }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Error analyzing VASP elastic constants workflow: {str(e)}'
+        }
 
 @with_metadata(schemas.ToolMetadata(
     name='Analyze VASP workflow of ab initio molecular dynamics (AIMD) simulations',
@@ -1811,135 +1872,142 @@ def analyze_vasp_workflow_of_aimd(
             'message': f'Invalid input parameters: {str(e)}'
         }
 
-    runs_dir = aimd_dir
+    try: 
+        runs_dir = aimd_dir
 
-    import matplotlib
-    matplotlib.use('Agg')  # Use non-interactive backend for plotting
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend for plotting
+        import matplotlib.pyplot as plt
+        import seaborn as sns
 
-    sns.set_theme(font_scale=1.2, style='whitegrid')
-    matplotlib.rcParams['xtick.direction'] = 'in'
-    matplotlib.rcParams['ytick.direction'] = 'in'
+        sns.set_theme(font_scale=1.2, style='whitegrid')
+        matplotlib.rcParams['xtick.direction'] = 'in'
+        matplotlib.rcParams['ytick.direction'] = 'in'
 
-    D_data= []
-    for root, dirs, files in os.walk(runs_dir):
-        for dir_name in dirs:
-            if dir_name.startswith('T_') and dir_name.endswith('K'):
-                temperature = int(dir_name[2:-1])
-                folder_path = os.path.join(root, dir_name)
-                
-                # Parse the time step from INCAR
-                incar_path = os.path.join(folder_path, 'INCAR')
-                with open(incar_path, 'r') as f:
-                    lines = f.readlines()
-                    POTIM = 1.0
-                    for line in lines:
-                        if line.strip().startswith('POTIM'):
-                            POTIM = float(line.strip().split('=')[1])
-                
-                # Parse the temperature and energy from OSZICAR
-                oszicar_path = os.path.join(folder_path, 'OSZICAR')
-                with open(oszicar_path, 'r') as f:
-                    lines = f.readlines()
-                    T_E_data = []
-                    for line in lines:
-                        if 'T=' in line:
-                            T = float(line.split()[2])
-                            E = float(line.split()[4])
-                            T_E_data.append((T, E))
-                T_E_df = pd.DataFrame(T_E_data, columns=['Temperature (K)', 'Energy (eV)'])
-                T_E_df.to_csv(f'{folder_path}/aimd_temperature_energy.csv', index=False, float_format='%.6f')
-                
-                # Plot Time vs Temperature and Energy
-                time = np.arange(len(T_E_df)) * POTIM / 1000  # Convert to ps
-                fig, ax = plt.subplots(2, 1, figsize=(8, 6), constrained_layout=True, sharex=True)
-                ax[0].plot(time, T_E_df['Temperature (K)'], color='C0', label='Temperature', linewidth=1.0)
-                ax[0].hlines(temperature, 0, time[-1], colors='C3', linestyles='dashed', label='Target Temperature')
-                ax[0].set_ylabel('Temperature (K)')
-                ax[0].set_title(f'Masgent AIMD Temperature & Energy at {temperature} K')
-                ax[0].legend(frameon=True, loc='upper right')
-                ax[1].plot(time, T_E_df['Energy (eV)'], color='C1', label='Energy', linewidth=1.0)
-                ax[1].set_ylabel('Energy (eV)')
-                ax[1].set_xlabel('Time (ps)')
-                ax[1].legend(frameon=True, loc='upper right')
-                plt.savefig(f'{folder_path}/aimd_temperature_energy.png', dpi=330)
-                plt.close()
+        D_data= []
+        for root, dirs, files in os.walk(runs_dir):
+            for dir_name in dirs:
+                if dir_name.startswith('T_') and dir_name.endswith('K'):
+                    temperature = int(dir_name[2:-1])
+                    folder_path = os.path.join(root, dir_name)
+                    
+                    # Parse the time step from INCAR
+                    incar_path = os.path.join(folder_path, 'INCAR')
+                    with open(incar_path, 'r') as f:
+                        lines = f.readlines()
+                        POTIM = 1.0
+                        for line in lines:
+                            if line.strip().startswith('POTIM'):
+                                POTIM = float(line.strip().split('=')[1])
+                    
+                    # Parse the temperature and energy from OSZICAR
+                    oszicar_path = os.path.join(folder_path, 'OSZICAR')
+                    with open(oszicar_path, 'r') as f:
+                        lines = f.readlines()
+                        T_E_data = []
+                        for line in lines:
+                            if 'T=' in line:
+                                T = float(line.split()[2])
+                                E = float(line.split()[4])
+                                T_E_data.append((T, E))
+                    T_E_df = pd.DataFrame(T_E_data, columns=['Temperature (K)', 'Energy (eV)'])
+                    T_E_df.to_csv(f'{folder_path}/aimd_temperature_energy.csv', index=False, float_format='%.6f')
+                    
+                    # Plot Time vs Temperature and Energy
+                    time = np.arange(len(T_E_df)) * POTIM / 1000  # Convert to ps
+                    fig, ax = plt.subplots(2, 1, figsize=(8, 6), constrained_layout=True, sharex=True)
+                    ax[0].plot(time, T_E_df['Temperature (K)'], color='C0', label='Temperature', linewidth=1.0)
+                    ax[0].hlines(temperature, 0, time[-1], colors='C3', linestyles='dashed', label='Target Temperature')
+                    ax[0].set_ylabel('Temperature (K)')
+                    ax[0].set_title(f'Masgent AIMD Temperature & Energy at {temperature} K')
+                    ax[0].legend(frameon=True, loc='upper right')
+                    ax[1].plot(time, T_E_df['Energy (eV)'], color='C1', label='Energy', linewidth=1.0)
+                    ax[1].set_ylabel('Energy (eV)')
+                    ax[1].set_xlabel('Time (ps)')
+                    ax[1].legend(frameon=True, loc='upper right')
+                    plt.savefig(f'{folder_path}/aimd_temperature_energy.png', dpi=330)
+                    plt.close()
 
-                # Parse MSD, diffusion coefficient, and conductivity from XDATCAR
-                xdatcar_path = os.path.join(folder_path, 'XDATCAR')
-                traj = read(xdatcar_path, index=':')
-                indices = [i for i, a in enumerate(traj[0]) if a.symbol == 'Li']
-                positions_all = np.array([traj[i].get_positions() for i in range(len(traj))])
-                cell = traj[0].cell.array
-                unwrapped = positions_all.copy()
-                for i in range(1, len(positions_all)):
-                    delta = positions_all[i] - positions_all[i-1]
-                    delta -= np.round(delta @ np.linalg.inv(cell)) @ cell
-                    unwrapped[i] = unwrapped[i-1] + delta
-                positions = unwrapped[:, indices]
-                positions_x = positions[:, :, 0]
-                positions_y = positions[:, :, 1]
-                positions_z = positions[:, :, 2]
-                msd_x = np.mean((positions_x - positions_x[0])**2, axis=1)
-                msd_y = np.mean((positions_y - positions_y[0])**2, axis=1)
-                msd_z = np.mean((positions_z - positions_z[0])**2, axis=1)
-                msd_total = np.mean(np.sum((positions - positions[0])**2, axis=2), axis=1)
-                time_ps = np.arange(len(msd_total)) * POTIM / 1000  # Convert to ps
-                msd_df = pd.DataFrame({
-                    'Time (ps)': time_ps,
-                    'MSD_x (Å²)': msd_x,
-                    'MSD_y (Å²)': msd_y,
-                    'MSD_z (Å²)': msd_z,
-                    'MSD_total (Å²)': msd_total
-                })
-                msd_df.to_csv(f'{folder_path}/aimd_msd.csv', index=False, float_format='%.6f')
-                
-                # Plot time vs MSD
-                fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-                ax = plt.subplot()
-                ax.plot(time_ps, msd_x, label='MSD_x', color='C0', linewidth=1.0)
-                ax.plot(time_ps, msd_y, label='MSD_y', color='C1', linewidth=1.0)
-                ax.plot(time_ps, msd_z, label='MSD_z', color='C2', linewidth=1.0)
-                ax.plot(time_ps, msd_total, label='MSD_total', color='C3', linewidth=1.0)
-                ax.set_xlabel('Time (ps)')
-                ax.set_ylabel('Mean Squared Displacement (Å²)')
-                ax.set_title(f'Masgent AIMD Mean Squared Displacement at {temperature} K')
-                ax.legend(frameon=True, loc='upper right')
-                plt.savefig(f'{folder_path}/aimd_msd.png', dpi=330)
-                plt.close()
-                
-                # Calculate diffusion coefficient from linear fit of MSD_total
-                slope, intercept = np.polyfit(time_ps, msd_total, 1)
-                diffusivity = slope / 6 / 1e4  # cm^2/s
-                D_data.append((temperature, diffusivity))
+                    # Parse MSD, diffusion coefficient, and conductivity from XDATCAR
+                    xdatcar_path = os.path.join(folder_path, 'XDATCAR')
+                    traj = read(xdatcar_path, index=':')
+                    indices = [i for i, a in enumerate(traj[0]) if a.symbol == 'Li']
+                    positions_all = np.array([traj[i].get_positions() for i in range(len(traj))])
+                    cell = traj[0].cell.array
+                    unwrapped = positions_all.copy()
+                    for i in range(1, len(positions_all)):
+                        delta = positions_all[i] - positions_all[i-1]
+                        delta -= np.round(delta @ np.linalg.inv(cell)) @ cell
+                        unwrapped[i] = unwrapped[i-1] + delta
+                    positions = unwrapped[:, indices]
+                    positions_x = positions[:, :, 0]
+                    positions_y = positions[:, :, 1]
+                    positions_z = positions[:, :, 2]
+                    msd_x = np.mean((positions_x - positions_x[0])**2, axis=1)
+                    msd_y = np.mean((positions_y - positions_y[0])**2, axis=1)
+                    msd_z = np.mean((positions_z - positions_z[0])**2, axis=1)
+                    msd_total = np.mean(np.sum((positions - positions[0])**2, axis=2), axis=1)
+                    time_ps = np.arange(len(msd_total)) * POTIM / 1000  # Convert to ps
+                    msd_df = pd.DataFrame({
+                        'Time (ps)': time_ps,
+                        'MSD_x (Å²)': msd_x,
+                        'MSD_y (Å²)': msd_y,
+                        'MSD_z (Å²)': msd_z,
+                        'MSD_total (Å²)': msd_total
+                    })
+                    msd_df.to_csv(f'{folder_path}/aimd_msd.csv', index=False, float_format='%.6f')
+                    
+                    # Plot time vs MSD
+                    fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+                    ax = plt.subplot()
+                    ax.plot(time_ps, msd_x, label='MSD_x', color='C0', linewidth=1.0)
+                    ax.plot(time_ps, msd_y, label='MSD_y', color='C1', linewidth=1.0)
+                    ax.plot(time_ps, msd_z, label='MSD_z', color='C2', linewidth=1.0)
+                    ax.plot(time_ps, msd_total, label='MSD_total', color='C3', linewidth=1.0)
+                    ax.set_xlabel('Time (ps)')
+                    ax.set_ylabel('Mean Squared Displacement (Å²)')
+                    ax.set_title(f'Masgent AIMD Mean Squared Displacement at {temperature} K')
+                    ax.legend(frameon=True, loc='upper right')
+                    plt.savefig(f'{folder_path}/aimd_msd.png', dpi=330)
+                    plt.close()
+                    
+                    # Calculate diffusion coefficient from linear fit of MSD_total
+                    slope, intercept = np.polyfit(time_ps, msd_total, 1)
+                    diffusivity = slope / 6 / 1e4  # cm^2/s
+                    D_data.append((temperature, diffusivity))
 
-    D_df = pd.DataFrame(D_data, columns=['Temperature (K)', 'Diffusion Coefficient (cm²/s)']).sort_values(by='Temperature (K)')
-    D_df.to_csv(f'{runs_dir}/aimd_diffusion_coefficients.csv', index=False, float_format='%.6e')
+        D_df = pd.DataFrame(D_data, columns=['Temperature (K)', 'Diffusion Coefficient (cm²/s)']).sort_values(by='Temperature (K)')
+        D_df.to_csv(f'{runs_dir}/aimd_diffusion_coefficients.csv', index=False, float_format='%.6e')
 
-    # Plot Arrhenius plot
-    fig = plt.figure(figsize=(8, 6), constrained_layout=True)
-    ax = plt.subplot()
-    D_df['Diffusion Coefficient (cm²/s)'] = D_df['Diffusion Coefficient (cm²/s)'].apply(lambda x: x if x > 0 else 1e-20)
-    logD = np.log10(D_df['Diffusion Coefficient (cm²/s)'])
-    inv_T = 1 / D_df['Temperature (K)']
-    ax.plot(inv_T, logD, 'o', color='C0', label='Data')
-    slope, intercept = np.polyfit(inv_T, logD, 1)
-    ax.plot(inv_T, slope * inv_T + intercept, '-', color='C3', label='Fit', linewidth=1.0)
-    ax.set_xlabel('1 / T $(K^{-1})$')
-    ax.set_ylabel('logD $(cm^2/s)$')
-    ax.set_title('Masgent AIMD Arrhenius Plot of Diffusion Coefficient')
-    ax.legend(frameon=True, loc='upper right')
-    plt.savefig(f'{runs_dir}/aimd_arrhenius_plot.png', dpi=330)
-    plt.close()
+        # Plot Arrhenius plot
+        fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+        ax = plt.subplot()
+        D_df['Diffusion Coefficient (cm²/s)'] = D_df['Diffusion Coefficient (cm²/s)'].apply(lambda x: x if x > 0 else 1e-20)
+        logD = np.log10(D_df['Diffusion Coefficient (cm²/s)'])
+        inv_T = 1 / D_df['Temperature (K)']
+        ax.plot(inv_T, logD, 'o', color='C0', label='Data')
+        slope, intercept = np.polyfit(inv_T, logD, 1)
+        ax.plot(inv_T, slope * inv_T + intercept, '-', color='C3', label='Fit', linewidth=1.0)
+        ax.set_xlabel('1 / T $(K^{-1})$')
+        ax.set_ylabel('logD $(cm^2/s)$')
+        ax.set_title('Masgent AIMD Arrhenius Plot of Diffusion Coefficient')
+        ax.legend(frameon=True, loc='upper right')
+        plt.savefig(f'{runs_dir}/aimd_arrhenius_plot.png', dpi=330)
+        plt.close()
 
-    return {
-        'status': 'success',
-        'message': f'Analyzed VASP workflow of AIMD simulations in {runs_dir}.',
-        'aimd_dir': runs_dir,
-        'diffusion_coefficients_csv': f'{runs_dir}/aimd_diffusion_coefficients.csv',
-        'arrhenius_plot': f'{runs_dir}/aimd_arrhenius_plot.png',
-    }
+        return {
+            'status': 'success',
+            'message': f'Analyzed VASP workflow of AIMD simulations in {runs_dir}.',
+            'aimd_dir': runs_dir,
+            'diffusion_coefficients_csv': f'{runs_dir}/aimd_diffusion_coefficients.csv',
+            'arrhenius_plot': f'{runs_dir}/aimd_arrhenius_plot.png',
+        }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Error analyzing VASP AIMD workflow: {str(e)}'
+        }
 
 @with_metadata(schemas.ToolMetadata(
     name='Run simulation using machine learning potentials (MLPs)',

@@ -34,6 +34,7 @@ Masgent removes that barrier by providing a unified, AI-driven interface for str
 - Turn-key VASP workflow templates (Convergence Test, EOS, Elastic, AIMD, NEB) with built-in analysis tools.
 - Automatic generation of all VASP inputs — INCAR, KPOINTS, POTCAR, POSCAR, and HPC job scripts — with sensible defaults.
 - One-command structure operations, including defect creation, supercells, slabs, interfaces, and SQS generation.
+- Visualization of structures through interactive web-based viewers.
 - Fast machine-learning-potential simulations using SevenNet, CHGNet, Orb-v3, and MatSim for rapid EOS, elasticity, and MD.
 - Lightweight ML utilities for feature preparation, dimensionality reduction, data augmentation, hyperparameter tuning, and model training.
 
@@ -48,6 +49,7 @@ Masgent removes that barrier by providing a unified, AI-driven interface for str
     - 1.1.6 Generate Special Quasirandom Structures (SQS)
     - 1.1.7 Generate surface slabs
     - 1.1.8 Generate interface structures
+    - 1.1.9 Visualize structures
   
   - 1.2 VASP Input File Preparation
     - 1.2.1 Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR)

@@ -848,6 +848,19 @@ def command_1_1_8():
     color_print(result['message'], 'green')
     time.sleep(3)
 
+@register('1.1.9', 'Visualize structure from POSCAR file.')
+def command_1_1_9():
+    try:
+        poscar_path = check_poscar()
+    except (KeyboardInterrupt, EOFError):
+        color_print('\n[Error] Input cancelled. Returning to previous menu...\n', 'red')
+        time.sleep(1)
+        return
+
+    result = tools.visualize_structure_from_poscar(poscar_path=poscar_path)
+    color_print(result['message'], 'green')
+    time.sleep(3)
+
 @register('1.2.1', 'Prepare full VASP input files (INCAR, KPOINTS, POTCAR, POSCAR).')
 def command_1_2_1():
     try:

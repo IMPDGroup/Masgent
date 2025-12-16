@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 
-import os, sys
+import os, datetime
 import asyncio
 from dotenv import load_dotenv
 from colorama import Fore, Style
@@ -69,6 +69,15 @@ Try asking:
 '''
     color_print(msg_1, 'white')
     color_print(msg_2, 'green')
+
+def save_msg(msg, role, filename):
+    '''
+    Save model/user conversation history to a text file in a readable format.
+    '''
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%-d %H:%M:%S')
+    with open(filename, 'a', encoding='utf-8') as f:
+        f.write(f'[{timestamp}] {role}:\n\n{msg}\n')
+        f.write('\n' + '-'*60 + '\n\n')
 
 async def keep_recent_messages(messages: list[ModelMessage]) -> list[ModelMessage]:
     '''
@@ -139,31 +148,40 @@ async def chat_stream(agent, user_input: str, history: list):
             message_history=history
             ) as result:
             
-            fully_reply = ''
-            
+            # Live streaming preview
+            sp.hide()
+            all = ''
             async for chunk in result.stream_text(delta=True):
-                fully_reply += chunk
-
-                sp.hide()
+                all += chunk
                 print(Fore.GREEN + chunk + Style.RESET_ALL, end='', flush=True)
-
+            print('')
+        
         sp.stop()
-        print('\n')
+
+        # Save AI response to conversation history
+        msg_path = os.path.join(os.environ['MASGENT_SESSION_RUNS_DIR'], 'conversation_history.txt')
+        save_msg(all, 'Masgent AI', filename=msg_path)
+
+        # Get full message history after the interaction
         all_msgs = list(result.all_messages())
-    
+
         return all_msgs
 
 async def ai_mode(agent):
     history = []
+
+    msg_path = os.path.join(os.environ['MASGENT_SESSION_RUNS_DIR'], 'conversation_history.txt')
+    with open(msg_path, 'a', encoding='utf-8') as f:
+        f.write('\n' + '='*60 + '\n')
+        f.write(f'New AI Session Started at {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
+        f.write('='*60 + '\n\n')
     
     try:
         while True:
             user_input = color_input('\nAsk anything, or type "back" to return, "new" to start a new session > ', 'yellow').strip()
 
-
             if not user_input:
                 continue
-            
 
             if user_input.lower() in {'new'}:
                 start_new_session()
@@ -173,9 +191,10 @@ async def ai_mode(agent):
                 return
             else:
                 try:
-                    wrapped_input = f'Request/Confirmation: {user_input} (If this is a Request: ALWAYS output a workflow plan with choosen tools and required parameters FIRST and ask for confirmation; if this is a Confirmation: ignore the instruction above.)'
-                    # wrapped_input = user_input
-                    history = await chat_stream(agent, wrapped_input, history)
+                    # Save user message to conversation history
+                    save_msg(user_input, 'User', filename=msg_path)
+                    # Start chat stream
+                    history = await chat_stream(agent, user_input, history)
                     # color_print(f'[Debug] Message history updated. Total messages: {len(history)}.\n', 'green')
                 except Exception as e:
                     color_print(f'[Error]: {e}', 'red')
@@ -223,6 +242,7 @@ def main():
             tools.generate_sqs_from_poscar,
             tools.generate_surface_slab_from_poscar,
             tools.generate_interface_from_poscars,
+            tools.visualize_structure_from_poscar,
             tools.generate_vasp_workflow_of_convergence_tests,
             tools.generate_vasp_workflow_of_eos,
             tools.generate_vasp_workflow_of_elastic_constants,

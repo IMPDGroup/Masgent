@@ -95,3 +95,6 @@ To publish a new version of the Masgent package to TestPyPI, follow these steps:
       deactivate
       ```
 
+## Memo
+- History records (Done)
+- Visualize the structures (Done)

@@ -116,6 +116,7 @@ def command_1_1():
                 '1.1.6 Generate Special Quasirandom Structures (SQS)',
                 '1.1.7 Generate surface slabs',
                 '1.1.8 Generate interface structures',
+                '1.1.9 Visualize structure',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()
@@ -149,6 +150,8 @@ def command_1_1():
                 run_command('1.1.7')
             elif user_input.startswith('1.1.8'):
                 run_command('1.1.8')
+            elif user_input.startswith('1.1.9'):
+                run_command('1.1.9')
             else:
                 continue
 

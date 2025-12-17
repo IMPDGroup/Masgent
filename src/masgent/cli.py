@@ -1,11 +1,9 @@
 # !/usr/bin/env python3
 
-import sys
 from bullet import Bullet, colors
 
 from masgent.cli_mode.cli_entries import run_command
 from masgent.utils.utils import (
-    color_print,
     print_help,
     start_new_session,
     clear_and_print_banner_and_entry_message,

@@ -21,7 +21,7 @@ from pymatgen.io.vasp.sets import (
     NEBSet,
     )
 
-from masgent import schemas
+from masgent.utils import schemas
 from masgent.utils.utils import (
     write_comments,
     ask_for_mp_api_key,

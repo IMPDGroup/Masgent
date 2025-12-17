@@ -18,7 +18,7 @@ from pydantic_ai.messages import (
     ToolReturnPart,
     )
 
-from masgent import tools
+from masgent.utils import tools
 from masgent.utils.utils import (
     ask_for_openai_api_key,
     validate_openai_api_key,

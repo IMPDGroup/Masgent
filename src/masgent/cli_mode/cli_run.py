@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import sys, os, time
+import os, time
 from bullet import Bullet, colors
 from yaspin import yaspin
 from yaspin.spinners import Spinners
 
-from masgent import tools, schemas
+from masgent.utils import tools, schemas
 from masgent.utils.utils import (
     color_print, 
     color_input, 

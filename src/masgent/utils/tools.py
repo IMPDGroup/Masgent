@@ -1533,7 +1533,7 @@ def generate_vasp_workflow_of_neb(
         write_comments(os.path.join(neb_dir, 'KPOINTS'), 'kpoints', kpoint_comments)
         
         scripts = generate_submit_script()
-        script_path = os.path.join(neb_dir, 'masgent_submit.sh')
+        script_path = os.path.join(neb_dir, 'submit.sh')
         with open(script_path, 'w') as f:
             f.write(scripts)
         
@@ -2152,8 +2152,8 @@ def run_simulation_using_mlps(
                 'message': f'Completed simulation using {mlps_type} in {mlps_simulation_dir}.',
                 'simulation_log_path': f'{task_dir}/masgent_mlps_single.log',
                 'contcar_path': f'{task_dir}/CONTCAR',
-                'total_energy (eV)': total_energy,
-                'energy_per_atom (eV/atom)': energy_per_atom,
+                'total_energy (eV)': float(total_energy),
+                'energy_per_atom (eV/atom)': float(energy_per_atom),
             }
         elif task_type == 'eos':
             task_dir = os.path.join(mlps_simulation_dir, 'eos')
@@ -2488,7 +2488,7 @@ def augment_data_for_machine_learning(
         output_df = pd.read_csv(output_data_path)
 
         # Run VAE for data augmentation
-        from masgent.utils.cave import run_cvae_augmentation
+        from masgent.utils.ml_cvae import run_cvae_augmentation
 
         x_aug_df, y_aug_df = run_cvae_augmentation(input_df=input_df, output_df=output_df, num_aug=num_augmentations)
         x_all_df = pd.concat([input_df, x_aug_df], ignore_index=True)
@@ -2547,7 +2547,7 @@ def design_model_for_machine_learning(
         os.makedirs(ml_model_design_dir, exist_ok=True)
 
         # Run Optuna for model design
-        from masgent.utils.nn_design import optimize
+        from masgent.utils.ml_nn_design import optimize
 
         optimize(
             input_data=input_data_path,
@@ -2614,7 +2614,7 @@ def train_model_for_machine_learning(
         os.makedirs(ml_model_training_dir, exist_ok=True)
 
         # Run model training
-        from masgent.utils.nn_train import train
+        from masgent.utils.ml_nn_train import train
         
         train(
             input_data=input_data_path,

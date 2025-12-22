@@ -13,17 +13,6 @@ def visualize_structure(poscar_path, save_path):
     structure = Structure.from_file(poscar_path)
     cif_str = structure.to(fmt='cif')
 
-    lattice = structure.lattice
-    a = lattice.matrix[0]
-    b = lattice.matrix[1]
-    c = lattice.matrix[2]
-
-    lattice_js = json.dumps({
-        "a": a.tolist(),
-        "b": b.tolist(),
-        "c": c.tolist()
-    })
-
     # Default radii
     atom_radii_real = {
         'H': 0.46, 'He': 1.22, 'Li': 1.57, 'Be': 1.12, 'B': 0.81, 'C': 0.77, 'N': 0.74, 'O': 0.74, 'F': 0.72, 'Ne': 1.60,
@@ -133,6 +122,7 @@ def visualize_structure(poscar_path, save_path):
         <button class="control-btn" onclick="rotateY()">Rotate Y</button>
         <button class="control-btn" onclick="rotateZ()">Rotate Z</button>
         <button class="control-btn" onclick="resetView()">Reset</button>
+        <button class="control-btn" onclick="save()">Save</button>
     </div>
 
     <div id='title' class='overlay'>
@@ -156,8 +146,6 @@ def visualize_structure(poscar_path, save_path):
         viewer.addModel(`{cif_str}`, 'cif');
 
         const atomRadii = {atom_radii_js};
-
-        const lattice = {lattice_js};
 
         // Apply custom radii
         Object.entries(atomRadii).forEach(([elem, radius]) => {{
@@ -192,6 +180,36 @@ def visualize_structure(poscar_path, save_path):
         function resetView() {{
             viewer.setView(baseView);
             viewer.zoomTo();
+            viewer.render();
+        }}
+
+        // Save function
+        function save() {{
+            const canvas = viewer.getCanvas();
+
+            // Save original size
+            const originalWidth = canvas.width;
+            const originalHeight = canvas.height;
+
+            // Increase resolution (2x for publication quality)
+            const scale = window.devicePixelRatio || 2;
+            canvas.width = originalWidth * scale;
+            canvas.height = originalHeight * scale;
+
+            viewer.render();
+
+            // Export image
+            const dataURL = canvas.toDataURL("image/png");
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'structure.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Restore original size
+            canvas.width = originalWidth;
+            canvas.height = originalHeight;
             viewer.render();
         }}
 

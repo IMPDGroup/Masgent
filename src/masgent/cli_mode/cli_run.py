@@ -1750,9 +1750,9 @@ def command_2_2():
 def command_2_3():
     call_mlps(mlps_type='Orb-v3')
 
-@register('2.4', 'MatSim')
+@register('2.4', 'MatterSim')
 def command_2_4():
-    call_mlps(mlps_type='MatSim')
+    call_mlps(mlps_type='MatterSim')
 
 @register('3.1.1', 'Feature analysis and visualization')
 def command_3_1_1():

@@ -171,9 +171,15 @@ def generate_vasp_poscar(formula: str) -> dict:
                     'status': 'error',
                     'message': f'No materials found in Materials Project database for formula: {formula}'
                 }
-        
-        # Save the most stable structure in the runs directory
-        mid_0 = docs[0].material_id
+            
+        # Get all material_ids and their energy above hull
+        mid_energy = {}
+        for doc in docs:
+            mid_energy[str(doc.material_id)] = doc.energy_above_hull
+        # Sort by energy above hull
+        sorted_mids = sorted(mid_energy.items(), key=lambda x: x[1])
+        # Get the most stable structure
+        mid_0 = sorted_mids[0][0]
         structure_0 = mpr.get_structure_by_material_id(mid_0)
         poscar_0 = Poscar(structure_0)
         # Save as POSCAR_{formula} and rewrite POSCAR
@@ -1630,10 +1636,13 @@ def analyze_vasp_workflow_of_convergence_tests(
             fig = plt.figure(figsize=(8, 6), constrained_layout=True)
             ax = plt.subplot()
             encut_values = sorted(encut_tests_dict.keys())
-            encut_energies = [encut_tests_dict[encut] for encut in encut_values]
-            ax.plot(encut_values, encut_energies, marker='o')
+            encut_energies = [encut_tests_dict[encut] * 1000 for encut in encut_values]
+            encut_energy_diffs = [encut_energies[i - 1] - encut_energies[i] for i in range(1, len(encut_energies))]
+            sns.lineplot(x=encut_values[1:], y=encut_energy_diffs, marker='o', ax=ax, linestyle='--', linewidth=2.0, markersize=12, color='C0', markerfacecolor='C2')
+            ax.axhline(y=1, color='r', linestyle='--', linewidth=3.0)
+            ax.text(encut_values[-1], 1, 'Threshold < 1 meV/atom', color='r', ha='right', va='center', fontdict={'fontweight': 'bold'}, fontsize='small', bbox=dict(facecolor='white', edgecolor='none', pad=0.5))
             ax.set_xlabel('ENCUT (eV)')
-            ax.set_ylabel('Energy (eV/atom)')
+            ax.set_ylabel('Energy Difference (meV/atom)')
             ax.set_title('Masgent ENCUT Convergence Test')
             plt.savefig(f'{runs_dir}/encut_tests.png', dpi=330)
             plt.close()
@@ -1643,10 +1652,13 @@ def analyze_vasp_workflow_of_convergence_tests(
             fig = plt.figure(figsize=(8, 6), constrained_layout=True)
             ax = plt.subplot()
             kpoint_values = sorted(kpoint_tests_dict.keys())
-            kpoint_energies = [kpoint_tests_dict[kp] for kp in kpoint_values]
-            ax.plot(kpoint_values, kpoint_energies, marker='o')
+            kpoint_energies = [kpoint_tests_dict[kp] * 1000 for kp in kpoint_values]
+            kpoint_energy_diffs = [kpoint_energies[i - 1] - kpoint_energies[i] for i in range(1, len(kpoint_energies))]
+            sns.lineplot(x=kpoint_values[1:], y=kpoint_energy_diffs, marker='o', ax=ax, linestyle='--', linewidth=2.0, markersize=12, color='C0', markerfacecolor='C2')
+            ax.axhline(y=1, color='r', linestyle='--', linewidth=3.0)
+            ax.text(kpoint_values[-1], 1, 'Threshold < 1 meV/atom', color='r', ha='right', va='center', fontdict={'fontweight': 'bold'}, fontsize='small', bbox=dict(facecolor='white', edgecolor='none', pad=0.5))
             ax.set_xlabel('Kpoints Per Atom (kppa)')
-            ax.set_ylabel('Energy (eV/atom)')
+            ax.set_ylabel('Energy Difference (meV/atom)')
             ax.set_title('Masgent Kpoint Convergence Test')
             plt.savefig(f'{runs_dir}/kpoint_tests.png', dpi=330)
             plt.close()
@@ -1689,21 +1701,30 @@ def analyze_vasp_workflow_of_eos(
     try:
         runs_dir = eos_dir
 
+        scales = []
+        structures = []
         volumes = []
         energies = []
 
         for root, dirs, files in os.walk(runs_dir):
-            for file in files:
-                if file == 'vasprun.xml':
-                    vasprun_path = os.path.join(root, file)
+            for dir_name in dirs:
+                if dir_name.startswith('scale_'):
+                    scale_value = float(dir_name.split('_')[-1])
+                    scales.append(scale_value)
+                    structure_path = os.path.join(root, dir_name, 'POSCAR')
+                    structure = Structure.from_file(structure_path)
+                    structures.append(structure)
+                    vasprun_path = os.path.join(root, dir_name, 'vasprun.xml')
                     vasprun = Vasprun(vasprun_path)
                     final_energy = vasprun.final_energy
                     natoms = len(vasprun.atomic_symbols)
                     final_energy_per_atom = final_energy / natoms
                     structure = vasprun.final_structure
-                    volume = structure.volume / natoms
+                    volume = structure.volume
                     volumes.append(volume)
                     energies.append(final_energy_per_atom)
+        eos_df = pd.DataFrame({'Scale': scales, 'Volume[Å³]': volumes, 'Energy[eV/atom]': energies}).sort_values(by='Volume[Å³]')
+        eos_df.to_csv(f'{runs_dir}/eos_cal.csv', index=False, float_format='%.8f')
 
         import matplotlib
         matplotlib.use('Agg')  # Use non-interactive backend for plotting
@@ -1713,15 +1734,31 @@ def analyze_vasp_workflow_of_eos(
         volumes_fit, energies_fit = fit_eos(volumes, energies)
         eos_fit_df = pd.DataFrame({'Volume[Å³]': volumes_fit, 'Energy[eV/atom]': energies_fit})
         eos_fit_df.to_csv(f'{runs_dir}/eos_fit.csv', index=False, float_format='%.8f')
+        equilibrium_volume = volumes_fit[energies_fit.argmin()]
+        scale_temp = scales[0]
+        volume_temp = volumes[0]
+        structure_temp = structures[0]
+        volume_at_scale_1 = volume_temp / (scale_temp ** 3)
+        structure_at_scale_1 = structure_temp.copy()
+        structure_at_scale_1.scale_lattice(structure_temp.volume / scale_temp)
+        equilibrium_scale = (equilibrium_volume / volume_at_scale_1) ** (1/3)
+        structure_equilibrium = structure_at_scale_1.copy()
+        structure_equilibrium.scale_lattice(equilibrium_volume)
+        structure_equilibrium.to(filename=f'{runs_dir}/POSCAR_equilibrium')
+        poscar_comments = f'# Generated by Masgent for EOS calculation with scale factor = {equilibrium_scale:.6f}.'
+        write_comments(f'{runs_dir}/POSCAR_equilibrium', 'poscar', poscar_comments)
+        
+        # Plot the EOS curve
         sns.set_theme(font_scale=1.2, style='whitegrid')
         matplotlib.rcParams['xtick.direction'] = 'in'
         matplotlib.rcParams['ytick.direction'] = 'in'
         fig = plt.figure(figsize=(8, 6), constrained_layout=True)
         ax = plt.subplot()
-        ax.scatter(volumes, energies, color='C3', label='Calculated')
-        ax.plot(volumes_fit, energies_fit, color='C0', label='Fitted')
-        ax.set_xlabel('Volume (Å³)', fontsize=14)
-        ax.set_ylabel('Energy (eV/atom)', fontsize=14)
+        ax.scatter(volumes, energies, color='C2', s=100, label='Calculated', zorder=5)
+        ax.scatter(equilibrium_volume, energies_fit.min(), color='C3', marker='*', s=150, label='Equilibrium', zorder=5)
+        ax.plot(volumes_fit, energies_fit, color='C0', linestyle='--', linewidth=2.0, label='Fitted')
+        ax.set_xlabel('Volume (Å³)')
+        ax.set_ylabel('Energy (eV/atom)')
         ax.set_title('Masgent EOS')
         ax.legend(frameon=True, loc='upper right')
         plt.savefig(f'{runs_dir}/eos_curve.png', dpi=330)
@@ -1732,6 +1769,7 @@ def analyze_vasp_workflow_of_eos(
             'message': f'Analyzed VASP workflow of EOS calculations in {runs_dir}.',
             'eos_fit_csv': f'{runs_dir}/eos_fit.csv',
             'eos_curve_plot': f'{runs_dir}/eos_curve.png',
+            'poscar_equilibrium': f'{runs_dir}/POSCAR_equilibrium',
         }
     
     except Exception as e:
@@ -2011,7 +2049,7 @@ def analyze_vasp_workflow_of_aimd(
 ))
 def run_simulation_using_mlps(
     poscar_path: str = f'{os.environ.get("MASGENT_SESSION_RUNS_DIR")}/POSCAR',
-    mlps_type: Literal['SevenNet', 'CHGNet', 'Orb-v3', 'MatSim'] = 'CHGNet',
+    mlps_type: Literal['SevenNet', 'CHGNet', 'Orb-v3', 'MatterSim'] = 'CHGNet',
     task_type: Literal['single', 'eos', 'elastic', 'md'] = 'single',
     fmax: float = 0.1,
     max_steps: int = 500,
@@ -2123,7 +2161,7 @@ def run_simulation_using_mlps(
             precision="float32-high",   # or "float32-highest" / "float64
             )
             calc = ORBCalculator(orbff, device='cpu')
-        elif mlps_type == 'MatSim':
+        elif mlps_type == 'MatterSim':
             from mattersim.forcefield import MatterSimCalculator
             calc = MatterSimCalculator()
         else:
@@ -2140,7 +2178,8 @@ def run_simulation_using_mlps(
             os.makedirs(task_dir, exist_ok=True)
             atoms = read(poscar_path, format='vasp')
             atoms.calc = calc
-            opt = LBFGS(FrechetCellFilter(atoms), logfile=f'{task_dir}/masgent_mlps_single.log')
+            # opt = LBFGS(FrechetCellFilter(atoms), logfile=f'{task_dir}/masgent_mlps_single.log')
+            opt = LBFGS(atoms, logfile=f'{task_dir}/masgent_mlps_single.log')
             opt.run(fmax=fmax, steps=max_steps)
             atoms.write(f'{task_dir}/CONTCAR', format='vasp', direct=True, sort=True)
             comments = f'# Generated by Masgent from simulation using {mlps_type} with fmax = {fmax} eV/Å.'

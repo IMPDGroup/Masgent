@@ -294,7 +294,7 @@ def command_2():
                 '2.1 SevenNet',
                 '2.2 CHGNet',
                 '2.3 Orb-v3',
-                '2.4 MatSim',
+                '2.4 MatterSim',
             ] + global_commands()
             cli = Bullet(prompt='\n', choices=choices, margin=1, bullet=' ●', word_color=colors.foreground['green'])
             user_input = cli.launch()

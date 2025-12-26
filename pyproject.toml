@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "masgent"
-version = "1.0.50"
+version = "1.1.0"
 description = "Masgent: Materials Simulation Agent"
 readme = "README_PyPI.md"
 authors = [{name = "Guangchen Liu", email = "gliu4@wpi.edu"}]
 maintainers = [{name = "Guangchen Liu", email = "gliu4@wpi.edu"}]
-keywords = ["AI agent", "Materials Science", "Computational Materials", "DFT", "VASP", "Machine Learning", "Machine Learning Potentials"]
+keywords = ["AI agent", "Materials Simulation", "Density Functional Theory", "Machine Learning Potentials", "Machine Learning"]
 license = {text = "MIT"}
 requires-python = ">=3.11, <3.14"
 dependencies = [
